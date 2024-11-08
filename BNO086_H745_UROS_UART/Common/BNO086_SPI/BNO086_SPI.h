@@ -104,8 +104,10 @@ typedef enum {
 } StatusCalibrationData;
 
 typedef struct{
-	StatusBit accuracy_status;
-	StatusBit sensorAccuracy_status;
+	StatusBit accuracyQuat;
+	StatusBit accuracyAccel;
+	StatusBit accuracyGyro;
+	StatusBit accuracyMag;
 	StatusCalibrationData CalibrationData;
 } CalibrateStatus;
 

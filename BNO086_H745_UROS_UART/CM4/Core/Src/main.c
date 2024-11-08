@@ -26,7 +26,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "BNO086_SPI/BNO086_SPI.h"
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

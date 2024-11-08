@@ -52,6 +52,10 @@ uint16_t mode = 0;
 unsigned char accuracy;
 unsigned char sensorAccuracy;
 CalibrateStatus calibratestruck;
+uint8_t accuracyQuat;
+uint8_t accuracyAccel;
+uint8_t accuracyGyro;
+uint8_t accuracyMag;
 
 int BNO080_Initialization(BNO086_t *bno)
 {
@@ -1163,10 +1167,11 @@ void BNO080_Calibration(CalibrateStatus *calib)
 		// Enable Rotation Vector output
 		// Enable Magnetic Field output
 		BNO080_calibrateAll(); // Turn on calibration for Accel, Gyro, and Mag
-		BNO080_enableGameRotationVector(20000); // Send data update every 20ms (50Hz)
-		BNO080_enableRotationVector(2500);
+		BNO080_enableGameRotationVector(10000); // Send data update every 20ms (50Hz)
+//		BNO080_enableRotationVector(2500);
 		BNO080_enableAccelerometer(2000);
-		BNO080_enableMagnetometer(20000); // Send data update every 20ms (50Hz)
+		BNO080_enableGyro(2500);
+		BNO080_enableMagnetometer(10000); // Send data update every 20ms (50Hz)
 
 		while (mode == 1 || mode == 2)
 		{
@@ -1181,20 +1186,33 @@ void BNO080_Calibration(CalibrateStatus *calib)
 					break;
 				}
 				BNO086_getData(&BNO086, UNIT_DEG);
-				// Observing the status bit of the magnetic field output
-				accuracy = BNO080_getMagAccuracy();
+				// Observing the status bit of the sensors output
+				accuracyQuat = BNO080_getQuatAccuracy();
+				accuracyAccel = BNO080_getAccelAccuracy();
+				accuracyGyro = BNO080_getGyroAccuracy();
+				accuracyMag = BNO080_getMagAccuracy();
 
-				sensorAccuracy = BNO080_getQuatAccuracy();
+				if (accuracyQuat == 0) calib->accuracyQuat = UNRELIABLE;
+				else if (accuracyQuat == 1) calib->accuracyQuat = LOW;
+				else if (accuracyQuat == 2) calib->accuracyQuat = MEDIUM;
+				else if (accuracyQuat == 3) calib->accuracyQuat = HIGH;
 
-				if (accuracy == 0) calib->accuracy_status = UNRELIABLE;
-				else if (accuracy == 1) calib->accuracy_status = LOW;
-				else if (accuracy == 2) calib->accuracy_status = MEDIUM;
-				else if (accuracy == 3) calib->accuracy_status = HIGH;
+				if (accuracyAccel == 0) calib->accuracyAccel = UNRELIABLE;
+				else if (accuracyAccel == 1) calib->accuracyAccel = LOW;
+				else if (accuracyAccel == 2) calib->accuracyAccel = MEDIUM;
+				else if (accuracyAccel == 3) calib->accuracyAccel = HIGH;
 
-				if (sensorAccuracy == 0) calib->sensorAccuracy_status = UNRELIABLE;
-				else if (sensorAccuracy == 1) calib->sensorAccuracy_status = LOW;
-				else if (sensorAccuracy == 2) calib->sensorAccuracy_status = MEDIUM;
-				else if (sensorAccuracy == 3) calib->sensorAccuracy_status = HIGH;
+				if (accuracyGyro == 0) calib->accuracyGyro = UNRELIABLE;
+				else if (accuracyGyro == 1) calib->accuracyGyro = LOW;
+				else if (accuracyGyro == 2) calib->accuracyGyro = MEDIUM;
+				else if (accuracyGyro == 3) calib->accuracyGyro = HIGH;
+
+				if (accuracyMag == 0) calib->accuracyMag = UNRELIABLE;
+				else if (accuracyMag == 1) calib->accuracyMag = LOW;
+				else if (accuracyMag == 2) calib->accuracyMag = MEDIUM;
+				else if (accuracyMag == 3) calib->accuracyMag = HIGH;
+
+
 
 				// Turn the LED and buzzer on when both accuracy and sensorAccuracy are high
 				if (accuracy == 3 && sensorAccuracy == 3)

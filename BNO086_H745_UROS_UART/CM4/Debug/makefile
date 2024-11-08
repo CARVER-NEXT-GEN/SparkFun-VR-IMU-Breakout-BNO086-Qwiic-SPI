@@ -62,8 +62,8 @@ all: main-build
 main-build: BNO086_H745_UROS_UART_CM4.elf secondary-outputs
 
 # Tool invocations
-BNO086_H745_UROS_UART_CM4.elf BNO086_H745_UROS_UART_CM4.map: $(OBJS) $(USER_OBJS) /home/tim/Downloads/BNO086_H745_UROS_UART/CM4/STM32H745ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "BNO086_H745_UROS_UART_CM4.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/tim/Downloads/BNO086_H745_UROS_UART/CM4/STM32H745ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BNO086_H745_UROS_UART_CM4.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+BNO086_H745_UROS_UART_CM4.elf BNO086_H745_UROS_UART_CM4.map: $(OBJS) $(USER_OBJS) /home/gun/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_H745_UROS_UART/CM4/STM32H745ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "BNO086_H745_UROS_UART_CM4.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/gun/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_H745_UROS_UART/CM4/STM32H745ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BNO086_H745_UROS_UART_CM4.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -1,5 +1,5 @@
 Middlewares/Third_Party/FreeRTOS/croutine.o: \
- /home/tim/Downloads/BNO086_H745_UROS_UART/Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
+ /home/gun/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_H745_UROS_UART/Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h \
  ../Core/Inc/FreeRTOSConfig.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h \

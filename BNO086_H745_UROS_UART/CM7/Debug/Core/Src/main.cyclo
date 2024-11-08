@@ -4,5 +4,4 @@
 ../Core/Src/main.c:288:6:SensorsPublished	1
 ../Core/Src/main.c:320:6:StartDefaultTask	2
 ../Core/Src/main.c:409:6:HAL_TIM_PeriodElapsedCallback	2
-../Core/Src/main.c:421:6:HAL_HSEM_FreeCallback	1
-../Core/Src/main.c:430:6:Error_Handler	1
+../Core/Src/main.c:426:6:Error_Handler	1

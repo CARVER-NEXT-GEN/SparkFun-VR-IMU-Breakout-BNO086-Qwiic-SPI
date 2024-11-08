@@ -89,6 +89,26 @@ typedef struct{
     euler_angle_t euler_angle;
 } BNO086_t;
 
+typedef enum {
+	IDLE,
+	UNRELIABLE,
+	LOW,
+	MEDIUM,
+	HIGH
+} StatusBit;
+
+typedef enum {
+	STORED_IDLE,
+	STORED_SUCCESSFULLY,
+	STORED_FAILED
+} StatusCalibrationData;
+
+typedef struct{
+	StatusBit accuracy_status;
+	StatusBit sensorAccuracy_status;
+	StatusCalibrationData CalibrationData;
+} CalibrateStatus;
+
 void READIMU_HSEM(BNO086_t *bno); // Only declaration for CM7
 
 //Registers
@@ -239,6 +259,8 @@ float getYaw(uint8_t unit);
 void BNO086_getData(BNO086_t *bno, RPY_UNIT rpy_unit);
 void SAVEIMU_HSEM(BNO086_t *bno);
 void READIMU_HSEM(BNO086_t *bno);
+
+void BNO080_Calibration(CalibrateStatus *calib);
 
 
 

@@ -46,6 +46,13 @@ int16_t magnetometer_Q1 = 4;
 
 unsigned char receivedData; // Byte Receive array
 
+//These for Calibrate sensor
+extern BNO086_t BNO086;
+uint16_t mode = 0;
+unsigned char accuracy;
+unsigned char sensorAccuracy;
+CalibrateStatus calibratestruck;
+
 int BNO080_Initialization(BNO086_t *bno)
 {
 
@@ -1141,6 +1148,97 @@ void SAVEIMU_HSEM(BNO086_t *bno){
 
 		  HAL_HSEM_Release(HSEM_ID_0,0);
 		}
+}
+
+void BNO080_Calibration(CalibrateStatus *calib)
+{
+	if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET) {
+
+		mode = 1;
+		// Resets BNO086 to disable all output
+		BNO080_Initialization(&BNO086);
+
+		// Enable dynamic calibration for accelerometer, gyroscope, and magnetometer
+		// Enable Game Rotation Vector output
+		// Enable Rotation Vector output
+		// Enable Magnetic Field output
+		BNO080_calibrateAll(); // Turn on calibration for Accel, Gyro, and Mag
+		BNO080_enableGameRotationVector(20000); // Send data update every 20ms (50Hz)
+		BNO080_enableRotationVector(2500);
+		BNO080_enableAccelerometer(2000);
+		BNO080_enableMagnetometer(20000); // Send data update every 20ms (50Hz)
+
+		while (mode == 1 || mode == 2)
+		{
+			if (BNO080_dataAvailable() == 1)
+			{
+
+				if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_RESET) {
+					mode = 2;
+				}
+				if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET && mode == 2){
+					mode = 3;
+					break;
+				}
+				BNO086_getData(&BNO086, UNIT_DEG);
+				// Observing the status bit of the magnetic field output
+				accuracy = BNO080_getMagAccuracy();
+
+				sensorAccuracy = BNO080_getQuatAccuracy();
+
+				if (accuracy == 0) calib->accuracy_status = UNRELIABLE;
+				else if (accuracy == 1) calib->accuracy_status = LOW;
+				else if (accuracy == 2) calib->accuracy_status = MEDIUM;
+				else if (accuracy == 3) calib->accuracy_status = HIGH;
+
+				if (sensorAccuracy == 0) calib->sensorAccuracy_status = UNRELIABLE;
+				else if (sensorAccuracy == 1) calib->sensorAccuracy_status = LOW;
+				else if (sensorAccuracy == 2) calib->sensorAccuracy_status = MEDIUM;
+				else if (sensorAccuracy == 3) calib->sensorAccuracy_status = HIGH;
+
+				// Turn the LED and buzzer on when both accuracy and sensorAccuracy are high
+				if (accuracy == 3 && sensorAccuracy == 3)
+				{
+					HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
+				}
+				else
+				{
+					HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET);
+				}
+			}
+
+			HAL_Delay(100);
+		}
+
+		// End the loop when B1 pin is push to low, turn LED
+		HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET);
+
+		// Save current dynamic calibration data (DCD) to memory
+		BNO080_saveCalibration();
+		BNO080_requestCalibrationStatus();
+
+		// Wait for calibration response, timeout if no response
+		int counter = 100;
+		while (1)
+		{
+			if (--counter == 0) break;
+			if (BNO080_dataAvailable())
+			{
+				// Wait for ME Calibration Response Status byte to go to zero
+				if (BNO080_calibrationComplete() == 1)
+				{
+					calib->CalibrationData = STORED_SUCCESSFULLY;
+					break;
+				}
+			}
+			HAL_Delay(10);
+		}
+
+		if (counter == 0)
+		{
+			calib->CalibrationData = STORED_FAILED;
+		}
+	}
 }
 #else
 

@@ -51,14 +51,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-//float q[4]= {0};
-//float quatRadianAccuracy;
-//float Accel[3]= {0};
-//float LinearAccel[3] = {0};
-//float Gyro[3] = {0};
-//float Mag[3] = {0};
-
 BNO086_t BNO086;
+CalibrateStatus CALIBRATE;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,6 +110,8 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+
+  	  BNO080_Calibration(&CALIBRATE); // Press B1 Button before power up to enter calibration mode
 
 	  BNO080_Initialization(&BNO086);
 	  BNO080_enableRotationVector(2500); //enable rotation vector at 400Hz (2500 microsecs)

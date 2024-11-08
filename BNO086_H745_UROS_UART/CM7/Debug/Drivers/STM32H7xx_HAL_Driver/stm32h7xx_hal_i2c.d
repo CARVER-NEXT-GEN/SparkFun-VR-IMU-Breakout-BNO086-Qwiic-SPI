@@ -1,5 +1,5 @@
 Drivers/STM32H7xx_HAL_Driver/stm32h7xx_hal_i2c.o: \
- /home/tim/Downloads/BNO086_H745_UROS_UART/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c \
+ /home/gun/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_H745_UROS_UART/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h \
  ../Core/Inc/stm32h7xx_hal_conf.h \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc.h \

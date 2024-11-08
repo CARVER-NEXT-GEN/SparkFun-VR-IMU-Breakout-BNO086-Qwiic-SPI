@@ -418,10 +418,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   /* USER CODE END Callback 1 */
 }
-void HAL_HSEM_FreeCallback(uint32_t SemMask){
-	HSEM_FLAG = 1;
-	HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
-}
 
 /**
   * @brief  This function is executed in case of error occurrence.

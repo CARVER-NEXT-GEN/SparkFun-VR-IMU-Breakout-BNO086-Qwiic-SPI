@@ -1,6 +1,6 @@
 Common/BNO086_SPI/BNO086_SPI.o: \
- /home/tim/Downloads/BNO086_H745_UROS_UART/Common/BNO086_SPI/BNO086_SPI.c \
- /home/tim/Downloads/BNO086_H745_UROS_UART/Common/BNO086_SPI/BNO086_SPI.h \
+ /home/gun/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_H745_UROS_UART/Common/BNO086_SPI/BNO086_SPI.c \
+ /home/gun/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_H745_UROS_UART/Common/BNO086_SPI/BNO086_SPI.h \
  ../Core/Inc/main.h \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h \
  ../Core/Inc/stm32h7xx_hal_conf.h \
@@ -40,8 +40,8 @@ Common/BNO086_SPI/BNO086_SPI.o: \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pcd.h \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_ll_usb.h \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pcd_ex.h \
- /home/tim/Downloads/BNO086_H745_UROS_UART/Common/SRAM4.h
-/home/tim/Downloads/BNO086_H745_UROS_UART/Common/BNO086_SPI/BNO086_SPI.h:
+ /home/gun/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_H745_UROS_UART/Common/SRAM4.h
+/home/gun/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_H745_UROS_UART/Common/BNO086_SPI/BNO086_SPI.h:
 ../Core/Inc/main.h:
 ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h:
 ../Core/Inc/stm32h7xx_hal_conf.h:
@@ -81,4 +81,4 @@ Common/BNO086_SPI/BNO086_SPI.o: \
 ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pcd.h:
 ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_ll_usb.h:
 ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pcd_ex.h:
-/home/tim/Downloads/BNO086_H745_UROS_UART/Common/SRAM4.h:
+/home/gun/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_H745_UROS_UART/Common/SRAM4.h:

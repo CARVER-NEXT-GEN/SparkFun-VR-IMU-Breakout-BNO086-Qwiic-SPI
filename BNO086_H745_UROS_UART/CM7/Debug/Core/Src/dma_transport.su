@@ -1,0 +1,4 @@
+../Core/Src/dma_transport.c:20:6:cubemx_transport_open	24	static
+../Core/Src/dma_transport.c:26:6:cubemx_transport_close	24	static
+../Core/Src/dma_transport.c:32:8:cubemx_transport_write	32	static
+../Core/Src/dma_transport.c:48:8:cubemx_transport_read	40	static,ignoring_inline_asm

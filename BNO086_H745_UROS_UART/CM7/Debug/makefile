@@ -57,8 +57,7 @@ BNO086_H745_UROS_UART_CM7.list \
 
 
 # All Target
-all:
-	+@$(MAKE) --no-print-directory pre-build && $(MAKE) --no-print-directory main-build
+all: main-build
 
 # Main-build Target
 main-build: BNO086_H745_UROS_UART_CM7.elf secondary-outputs
@@ -84,10 +83,6 @@ clean:
 	-$(RM) BNO086_H745_UROS_UART_CM7.elf BNO086_H745_UROS_UART_CM7.list BNO086_H745_UROS_UART_CM7.map default.size.stdout
 	-@echo ' '
 
-pre-build:
-	echo "tim" | sudo -S chmod 666 /var/run/docker.sock && docker pull microros/micro_ros_static_library_builder:humble && docker run --rm -v /home/tim/Documents/GitHub/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_H745_UROS_UART/CM7:/project --env MICROROS_LIBRARY_FOLDER=micro_ros_stm32cubemx_utils/microros_static_library_ide microros/micro_ros_static_library_builder:humble
-	-@echo ' '
-
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
 
 fail-specified-linker-script-missing:
@@ -97,6 +92,6 @@ fail-specified-linker-script-missing:
 warn-no-linker-script-specified:
 	@echo 'Warning: No linker script specified. Check the linker settings in the build configuration.'
 
-.PHONY: all clean dependents main-build fail-specified-linker-script-missing warn-no-linker-script-specified pre-build
+.PHONY: all clean dependents main-build fail-specified-linker-script-missing warn-no-linker-script-specified
 
 -include ../makefile.targets

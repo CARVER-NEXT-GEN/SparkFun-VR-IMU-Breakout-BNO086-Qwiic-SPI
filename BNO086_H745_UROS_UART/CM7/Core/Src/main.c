@@ -104,7 +104,7 @@ void * microros_allocate(size_t size, void * state);
 void microros_deallocate(void * pointer, void * state);
 void * microros_reallocate(void * pointer, size_t size, void * state);
 void * microros_zero_allocate(size_t number_of_elements, size_t size_of_element, void * state);
-void BNO055_Published();
+void BNO086_Published();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -339,9 +339,6 @@ void StartDefaultTask(void *argument)
   if (!rcutils_set_default_allocator(&freeRTOS_allocator)) {
       printf("Error on default allocators (line %d)\n", __LINE__);
   }
-
-  // micro-ROS app
-
 
 
   allocator = rcl_get_default_allocator();

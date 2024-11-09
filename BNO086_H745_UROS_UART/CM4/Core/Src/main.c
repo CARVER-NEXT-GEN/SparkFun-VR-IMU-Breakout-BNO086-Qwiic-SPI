@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "BNO086_SPI/BNO086_SPI.h"
+#include <BNO086_SPI/BNO086_SPI.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,10 +35,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
-#ifndef HSEM_ID_0
-#define HSEM_ID_0 (0U) /* HW semaphore 0*/
-#endif
 
 /* USER CODE END PD */
 
@@ -110,18 +106,22 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-  	  BNO080_Calibration(&CALIBRATE); // Press B1 Button before power up to enter calibration mode
+    // ================================================== BNO086 ==================================================//
 
-	  BNO080_Initialization(&BNO086);
-	  BNO080_enableRotationVector(2500); //enable rotation vector at 400Hz (2500 microsecs)
-//	  BNO080_enableGameRotationVector(11111); //enable Gaming Rotation vector at 90Hz (2500 microsecs)
+    BNO086_Calibration(&BNO086, &CALIBRATE); // Press B1 Button before power up to enter calibration mode
+ 	BNO086_Initialization(&BNO086);
+ 	BNO086_enableRotationVector(2500); //enable rotation vector at 400Hz (2500 microsecs)
+ 	 //BNO086_enableGameRotationVector(11111); //enable Gaming Rotation vector at 90Hz (2500 microsecs)
 
-	  BNO080_enableAccelerometer(2000); //enable Accelerometer at 400Hz (2500 microsecs)
-	  BNO080_enableLinearAccelerometer(2500); //enable Linear Accelerometer at 400Hz (2500 microsecs)
-	  BNO080_enableGyro(2500); //enable Gyrometer  at 400Hz (2500 microsecs)
-	  BNO080_enableMagnetometer(10000); //enable Magnetometer at 100Hz (10000 microsecs)
+ 	BNO086_enableAccelerometer(2000); //enable Accelerometer at 400Hz (2500 microsecs)
+ 	BNO086_enableLinearAccelerometer(2500); //enable Linear Accelerometer at 400Hz (2500 microsecs)
+ 	BNO086_enableGyro(2500); //enable Gyrometer  at 400Hz (2500 microsecs)
+ 	BNO086_enableMagnetometer(10000); //enable Magnetometer at 100Hz (10000 microsecs)
 
-	  HAL_TIM_Base_Start_IT(&htim2);
+     // ================================================== Timer Interrupt ==================================================//
+
+ 	HAL_TIM_Base_Start_IT(&htim2);
+
 
   /* USER CODE END 2 */
 
@@ -137,7 +137,7 @@ int main(void)
 
 //	  HAL_HSEM_DeactivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
 //	  HAL_Delay(1);
-//	  if(BNO080_dataAvailable() == 1){
+//	  if(BNO086_dataAvailable() == 1){
 //	  		BNO086_getData(&BNO086, UNIT_DEG, DISABLE_HSEM);
 //	  			SAVEIMU_HSEM(&BNO086);
 //	  	}
@@ -157,9 +157,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if(htim == &htim2){
 		HAL_HSEM_DeactivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
 
-		if(BNO080_dataAvailable() == 1){
+		if(BNO086_dataAvailable() == 1){
 			BNO086_getData(&BNO086, UNIT_DEG);
-			SAVEIMU_HSEM(&BNO086);
+			BNO086_SAVE_HSEM(&BNO086);
 		}
 	}
 

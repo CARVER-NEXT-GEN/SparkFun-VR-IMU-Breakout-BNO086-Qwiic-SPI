@@ -11,6 +11,8 @@
 //#include "stdio.h"
 #include "SRAM4.h"
 
+volatile SharedMemory *const SRAM4_BNO086 = (SharedMemory*)(SHARED_MEMORY_ADDRESS_BNO086); // Definition in SRAM4_BNO086.c
+
 #if __CORTEX_M == 4  // Only for CM7 core
 
 extern SPI_HandleTypeDef hspi1;
@@ -46,8 +48,6 @@ int16_t magnetometer_Q1 = 4;
 
 unsigned char receivedData; // Byte Receive array
 
-//These for Calibrate sensor
-extern BNO086_t BNO086;
 uint16_t mode = 0;
 unsigned char accuracy;
 unsigned char sensorAccuracy;
@@ -57,61 +57,61 @@ uint8_t accuracyAccel;
 uint8_t accuracyGyro;
 uint8_t accuracyMag;
 
-int BNO080_Initialization(BNO086_t *bno)
+int BNO086_Initialization(BNO086_t *bno)
 {
 
-	CHIP_DESELECT(BNO080);
+	CHIP_DESELECT(BNO086);
 	WAKE_HIGH();
 	RESET_HIGH();
 
-	CHIP_DESELECT(BNO080);
+	CHIP_DESELECT(BNO086);
 
-	//Configure the BNO080 for SPI communication
+	//Configure the BNO086 for SPI communication
 	WAKE_HIGH();	//Before boot up the PS0/WAK pin must be high to enter SPI mode
-	RESET_LOW();	//Reset BNO080
+	RESET_LOW();	//Reset BNO086
 	HAL_Delay(200);	//Min length not specified in datasheet?
 	RESET_HIGH();	//Bring out of reset
 
-	BNO080_waitForSPI(); //Wait until INT pin goes low.
+	BNO086_waitForSPI(); //Wait until INT pin goes low.
 
 	//At system startup, the hub must send its full advertisement message (see 5.2 and 5.3) to the
 	//host. It must not send any other data until this step is complete.
-	//When BNO080 first boots it broadcasts big startup packet
+	//When BNO086 first boots it broadcasts big startup packet
 	//Read it and dump it
-	BNO080_waitForSPI(); //Wait for assertion of INT before reading advert message.
-	BNO080_receivePacket();
+	BNO086_waitForSPI(); //Wait for assertion of INT before reading advert message.
+	BNO086_receivePacket();
 
-	//The BNO080 will then transmit an unsolicited Initialize Response (see 6.4.5.2)
+	//The BNO086 will then transmit an unsolicited Initialize Response (see 6.4.5.2)
 	//Read it and dump it
-	BNO080_waitForSPI();  //Wait for assertion of INT before reading Init response
-	BNO080_receivePacket();
+	BNO086_waitForSPI();  //Wait for assertion of INT before reading Init response
+	BNO086_receivePacket();
 
 	//Check communication with device
 	shtpData[0] = SHTP_REPORT_PRODUCT_ID_REQUEST; //Request the product ID and reset info
 	shtpData[1] = 0;						 //Reserved
 
 	//Transmit packet on channel 2, 2 bytes
-	BNO080_sendPacket(CHANNEL_CONTROL, 2);
+	BNO086_sendPacket(CHANNEL_CONTROL, 2);
 
 	//Now we wait for response
-	BNO080_waitForSPI();
-	if (BNO080_receivePacket() == 1)
+	BNO086_waitForSPI();
+	if (BNO086_receivePacket() == 1)
 	{
 //		printf("header: %d %d %d %d\n", shtpHeader[0], shtpHeader[1], shtpHeader[2], shtpHeader[3]);
 		if (shtpData[0] == SHTP_REPORT_PRODUCT_ID_RESPONSE)
 		{
-//			printf("BNO080 who_am_i = 0x%02x...ok\n\n", shtpData[0]);
+//			printf("BNO086 who_am_i = 0x%02x...ok\n\n", shtpData[0]);
 			return (0);
 		}// Sensor OK
 	}
 
-//	printf("BNO080 Not OK: 0x%02x Should be 0x%02x\n", shtpData[0], SHTP_REPORT_PRODUCT_ID_RESPONSE);
+//	printf("BNO086 Not OK: 0x%02x Should be 0x%02x\n", shtpData[0], SHTP_REPORT_PRODUCT_ID_RESPONSE);
 	return (1); //Something went wrong
 }
 
 unsigned char SPI2_SendByte(unsigned char data) // Todo
 {
-//	CHIP_SELECT(BNO080);
+//	CHIP_SELECT(BNO086);
 
     HAL_SPI_TransmitReceive(&hspi1, &data, &receivedData, 1, HAL_MAX_DELAY);
 
@@ -121,26 +121,26 @@ unsigned char SPI2_SendByte(unsigned char data) // Todo
 
 //Updates the latest variables if possible
 //Returns false if new readings are not available
-int BNO080_dataAvailable(void)
+int BNO086_dataAvailable(void)
 {
 	//If we have an interrupt pin connection available, check if data is available.
-	//If int pin is NULL, then we'll rely on BNO080_receivePacket() to timeout
-	//See issue 13: https://github.com/sparkfun/SparkFun_BNO080_Arduino_Library/issues/13
+	//If int pin is NULL, then we'll rely on BNO086_receivePacket() to timeout
+	//See issue 13: https://github.com/sparkfun/SparkFun_BNO086_Arduino_Library/issues/13
 
 	if (HAL_GPIO_ReadPin(INT_GPIO_Port, INT_Pin) == 1)
 		return (0);
 
-	if (BNO080_receivePacket() == 1)
+	if (BNO086_receivePacket() == 1)
 	{
 		//Check to see if this packet is a sensor reporting its data to us
 		if (shtpHeader[2] == CHANNEL_REPORTS && shtpData[0] == SHTP_REPORT_BASE_TIMESTAMP)
 		{
-			BNO080_parseInputReport(); //This will update the rawAccelX, etc variables depending on which feature report is found
+			BNO086_parseInputReport(); //This will update the rawAccelX, etc variables depending on which feature report is found
 			return (1);
 		}
 		else if (shtpHeader[2] == CHANNEL_CONTROL)
 		{
-			BNO080_parseCommandReport(); //This will update responses to commands, calibrationStatus, etc.
+			BNO086_parseCommandReport(); //This will update responses to commands, calibrationStatus, etc.
 			return (1);
 		}
 	}
@@ -165,11 +165,11 @@ int BNO080_dataAvailable(void)
 //shtpData[5 + 6]: R6
 //shtpData[5 + 7]: R7
 //shtpData[5 + 8]: R8
-void BNO080_parseCommandReport(void)
+void BNO086_parseCommandReport(void)
 {
 	if (shtpData[0] == SHTP_REPORT_COMMAND_RESPONSE)
 	{
-		//The BNO080 responds with this report to command requests. It's up to use to remember which command we issued.
+		//The BNO086 responds with this report to command requests. It's up to use to remember which command we issued.
 		uint8_t command = shtpData[2]; //This is the Command byte of the response
 
 		if (command == COMMAND_ME_CALIBRATE)
@@ -201,7 +201,7 @@ void BNO080_parseCommandReport(void)
 //shtpData[8:9]: k/accel z/gyro z/etc
 //shtpData[10:11]: real/gyro temp/etc
 //shtpData[12:13]: Accuracy estimate
-void BNO080_parseInputReport(void)
+void BNO086_parseInputReport(void)
 {
 	//Calculate the number of data bytes in this packet
 	int16_t dataLength = ((uint16_t)shtpHeader[1] << 8 | shtpHeader[0]);
@@ -296,7 +296,7 @@ void BNO080_parseInputReport(void)
 		case SHTP_REPORT_COMMAND_RESPONSE:
 		{
 //			printf("!");
-			//The BNO080 responds with this report to command requests. It's up to use to remember which command we issued.
+			//The BNO086 responds with this report to command requests. It's up to use to remember which command we issued.
 			uint8_t command = shtpData[5 + 2]; //This is the Command byte of the response
 
 			if (command == COMMAND_ME_CALIBRATE)
@@ -317,61 +317,61 @@ void BNO080_parseInputReport(void)
 }
 
 //Return the rotation vector quaternion I
-float BNO080_getQuatI()
+float BNO086_getQuatI()
 {
-	return BNO080_qToFloat(rawQuatI, rotationVector_Q1);
+	return BNO086_qToFloat(rawQuatI, rotationVector_Q1);
 }
 
 //Return the rotation vector quaternion J
-float BNO080_getQuatJ()
+float BNO086_getQuatJ()
 {
-	return BNO080_qToFloat(rawQuatJ, rotationVector_Q1);
+	return BNO086_qToFloat(rawQuatJ, rotationVector_Q1);
 }
 
 //Return the rotation vector quaternion K
-float BNO080_getQuatK()
+float BNO086_getQuatK()
 {
-	return BNO080_qToFloat(rawQuatK, rotationVector_Q1);
+	return BNO086_qToFloat(rawQuatK, rotationVector_Q1);
 }
 
 //Return the rotation vector quaternion Real
-float BNO080_getQuatReal()
+float BNO086_getQuatReal()
 {
-	return BNO080_qToFloat(rawQuatReal, rotationVector_Q1);
+	return BNO086_qToFloat(rawQuatReal, rotationVector_Q1);
 }
 
 //Return the rotation vector accuracy
-float BNO080_getQuatRadianAccuracy()
+float BNO086_getQuatRadianAccuracy()
 {
-	return BNO080_qToFloat(rawQuatRadianAccuracy, rotationVector_Q1);
+	return BNO086_qToFloat(rawQuatRadianAccuracy, rotationVector_Q1);
 }
 
 //Return the acceleration component
-uint8_t BNO080_getQuatAccuracy()
+uint8_t BNO086_getQuatAccuracy()
 {
 	return (quatAccuracy);
 }
 
 //Return the acceleration component
-float BNO080_getAccelX()
+float BNO086_getAccelX()
 {
-	return BNO080_qToFloat(rawAccelX, accelerometer_Q1);
+	return BNO086_qToFloat(rawAccelX, accelerometer_Q1);
 }
 
 //Return the acceleration component
-float BNO080_getAccelY()
+float BNO086_getAccelY()
 {
-	return BNO080_qToFloat(rawAccelY, accelerometer_Q1);
+	return BNO086_qToFloat(rawAccelY, accelerometer_Q1);
 }
 
 //Return the acceleration component
-float BNO080_getAccelZ()
+float BNO086_getAccelZ()
 {
-	return BNO080_qToFloat(rawAccelZ, accelerometer_Q1);
+	return BNO086_qToFloat(rawAccelZ, accelerometer_Q1);
 }
 
 //Return the acceleration component
-uint8_t BNO080_getAccelAccuracy()
+uint8_t BNO086_getAccelAccuracy()
 {
 	return (accelAccuracy);
 }
@@ -379,157 +379,157 @@ uint8_t BNO080_getAccelAccuracy()
 // linear acceleration, i.e. minus gravity
 
 //Return the acceleration component
-float BNO080_getLinAccelX()
+float BNO086_getLinAccelX()
 {
-	return BNO080_qToFloat(rawLinAccelX, linear_accelerometer_Q1);
+	return BNO086_qToFloat(rawLinAccelX, linear_accelerometer_Q1);
 }
 
 //Return the acceleration component
-float BNO080_getLinAccelY()
+float BNO086_getLinAccelY()
 {
-	return BNO080_qToFloat(rawLinAccelY, linear_accelerometer_Q1);
+	return BNO086_qToFloat(rawLinAccelY, linear_accelerometer_Q1);
 }
 
 //Return the acceleration component
-float BNO080_getLinAccelZ()
+float BNO086_getLinAccelZ()
 {
-	return BNO080_qToFloat(rawLinAccelZ, linear_accelerometer_Q1);
+	return BNO086_qToFloat(rawLinAccelZ, linear_accelerometer_Q1);
 }
 
 //Return the acceleration component
-uint8_t BNO080_getLinAccelAccuracy()
+uint8_t BNO086_getLinAccelAccuracy()
 {
 	return (accelLinAccuracy);
 }
 
 //Return the gyro component
-float BNO080_getGyroX()
+float BNO086_getGyroX()
 {
-	return BNO080_qToFloat(rawGyroX, gyro_Q1);
+	return BNO086_qToFloat(rawGyroX, gyro_Q1);
 }
 
 //Return the gyro component
-float BNO080_getGyroY()
+float BNO086_getGyroY()
 {
-	return BNO080_qToFloat(rawGyroY, gyro_Q1);
+	return BNO086_qToFloat(rawGyroY, gyro_Q1);
 }
 
 //Return the gyro component
-float BNO080_getGyroZ()
+float BNO086_getGyroZ()
 {
-	return BNO080_qToFloat(rawGyroZ, gyro_Q1);
+	return BNO086_qToFloat(rawGyroZ, gyro_Q1);
 }
 
 //Return the gyro component
-uint8_t BNO080_getGyroAccuracy()
+uint8_t BNO086_getGyroAccuracy()
 {
 	return (gyroAccuracy);
 }
 
 //Return the magnetometer component
-float BNO080_getMagX()
+float BNO086_getMagX()
 {
-	return BNO080_qToFloat(rawMagX, magnetometer_Q1);
+	return BNO086_qToFloat(rawMagX, magnetometer_Q1);
 }
 
 //Return the magnetometer component
-float BNO080_getMagY()
+float BNO086_getMagY()
 {
-	return BNO080_qToFloat(rawMagY, magnetometer_Q1);
+	return BNO086_qToFloat(rawMagY, magnetometer_Q1);
 }
 
 //Return the magnetometer component
-float BNO080_getMagZ()
+float BNO086_getMagZ()
 {
-	return BNO080_qToFloat(rawMagZ, magnetometer_Q1);
+	return BNO086_qToFloat(rawMagZ, magnetometer_Q1);
 }
 
 //Return the mag component
-uint8_t BNO080_getMagAccuracy()
+uint8_t BNO086_getMagAccuracy()
 {
 	return (magAccuracy);
 }
 
 //Return the step count
-uint16_t BNO080_getStepCount()
+uint16_t BNO086_getStepCount()
 {
 	return (stepCount);
 }
 
 //Return the stability classifier
-uint8_t BNO080_getStabilityClassifier()
+uint8_t BNO086_getStabilityClassifier()
 {
 	return (stabilityClassifier);
 }
 
 //Return the activity classifier
-uint8_t BNO080_getActivityClassifier()
+uint8_t BNO086_getActivityClassifier()
 {
 	return (activityClassifier);
 }
 
 //Return the time stamp
-uint32_t BNO080_getTimeStamp()
+uint32_t BNO086_getTimeStamp()
 {
 	return (timeStamp);
 }
 
 //Given a record ID, read the Q1 value from the metaData record in the FRS (ya, it's complicated)
 //Q1 is used for all sensor data calculations
-int16_t BNO080_getQ1(uint16_t recordID)
+int16_t BNO086_getQ1(uint16_t recordID)
 {
 	//Q1 is always the lower 16 bits of word 7
-	return BNO080_readFRSword(recordID, 7) & 0xFFFF; //Get word 7, lower 16 bits
+	return BNO086_readFRSword(recordID, 7) & 0xFFFF; //Get word 7, lower 16 bits
 }
 
 //Given a record ID, read the Q2 value from the metaData record in the FRS
 //Q2 is used in sensor bias
-int16_t BNO080_getQ2(uint16_t recordID)
+int16_t BNO086_getQ2(uint16_t recordID)
 {
 	//Q2 is always the upper 16 bits of word 7
-	return BNO080_readFRSword(recordID, 7) >> 16; //Get word 7, upper 16 bits
+	return BNO086_readFRSword(recordID, 7) >> 16; //Get word 7, upper 16 bits
 }
 
 //Given a record ID, read the Q3 value from the metaData record in the FRS
 //Q3 is used in sensor change sensitivity
-int16_t BNO080_getQ3(uint16_t recordID)
+int16_t BNO086_getQ3(uint16_t recordID)
 {
 	//Q3 is always the upper 16 bits of word 8
-	return BNO080_readFRSword(recordID, 8) >> 16; //Get word 8, upper 16 bits
+	return BNO086_readFRSword(recordID, 8) >> 16; //Get word 8, upper 16 bits
 }
 
 //Given a record ID, read the resolution value from the metaData record in the FRS for a given sensor
-float BNO080_getResolution(uint16_t recordID)
+float BNO086_getResolution(uint16_t recordID)
 {
 	//The resolution Q value are 'the same as those used in the sensor's input report'
 	//This should be Q1.
-	int16_t Q = BNO080_getQ1(recordID);
+	int16_t Q = BNO086_getQ1(recordID);
 
 	//Resolution is always word 2
-	uint32_t value = BNO080_readFRSword(recordID, 2); //Get word 2
+	uint32_t value = BNO086_readFRSword(recordID, 2); //Get word 2
 
-	return BNO080_qToFloat(value, Q);
+	return BNO086_qToFloat(value, Q);
 }
 
 //Given a record ID, read the range value from the metaData record in the FRS for a given sensor
-float BNO080_getRange(uint16_t recordID)
+float BNO086_getRange(uint16_t recordID)
 {
 	//The resolution Q value are 'the same as those used in the sensor's input report'
 	//This should be Q1.
-	int16_t Q = BNO080_getQ1(recordID);
+	int16_t Q = BNO086_getQ1(recordID);
 
 	//Range is always word 1
-	uint32_t value = BNO080_readFRSword(recordID, 1); //Get word 1
+	uint32_t value = BNO086_readFRSword(recordID, 1); //Get word 1
 
-	return BNO080_qToFloat(value, Q);
+	return BNO086_qToFloat(value, Q);
 }
 
 //Given a record ID and a word number, look up the word data
 //Helpful for pulling out a Q value, range, etc.
 //Use readFRSdata for pulling out multi-word objects for a sensor (Vendor data for example)
-uint32_t BNO080_readFRSword(uint16_t recordID, uint8_t wordNumber)
+uint32_t BNO086_readFRSword(uint16_t recordID, uint8_t wordNumber)
 {
-	if (BNO080_readFRSdata(recordID, wordNumber, 1) == 1) //Get word number, just one word in length from FRS
+	if (BNO086_readFRSdata(recordID, wordNumber, 1) == 1) //Get word number, just one word in length from FRS
 		return (metaData[0]);						  //Return this one word
 
 	return (0); //Error
@@ -537,7 +537,7 @@ uint32_t BNO080_readFRSword(uint16_t recordID, uint8_t wordNumber)
 
 //Ask the sensor for data from the Flash Record System
 //See 6.3.6 page 40, FRS Read Request
-void BNO080_frsReadRequest(uint16_t recordID, uint16_t readOffset, uint16_t blockSize)
+void BNO086_frsReadRequest(uint16_t recordID, uint16_t readOffset, uint16_t blockSize)
 {
 	shtpData[0] = SHTP_REPORT_FRS_READ_REQUEST; //FRS Read Request
 	shtpData[1] = 0;							//Reserved
@@ -549,18 +549,18 @@ void BNO080_frsReadRequest(uint16_t recordID, uint16_t readOffset, uint16_t bloc
 	shtpData[7] = (blockSize >> 8) & 0xFF;		//Block size MSB
 
 	//Transmit packet on channel 2, 8 bytes
-	BNO080_sendPacket(CHANNEL_CONTROL, 8);
+	BNO086_sendPacket(CHANNEL_CONTROL, 8);
 }
 
 //Given a sensor or record ID, and a given start/stop bytes, read the data from the Flash Record System (FRS) for this sensor
 //Returns true if metaData array is loaded successfully
 //Returns false if failure
-int BNO080_readFRSdata(uint16_t recordID, uint8_t startLocation, uint8_t wordsToRead)
+int BNO086_readFRSdata(uint16_t recordID, uint8_t startLocation, uint8_t wordsToRead)
 {
 	uint8_t spot = 0;
 
 	//First we send a Flash Record System (FRS) request
-	BNO080_frsReadRequest(recordID, startLocation, wordsToRead); //From startLocation of record, read a # of words
+	BNO086_frsReadRequest(recordID, startLocation, wordsToRead); //From startLocation of record, read a # of words
 
 	//Read bytes until FRS reports that the read is complete
 	while (1)
@@ -569,7 +569,7 @@ int BNO080_readFRSdata(uint16_t recordID, uint8_t startLocation, uint8_t wordsTo
 		while (1)
 		{
 			uint8_t counter = 0;
-			while (BNO080_receivePacket() == 0)
+			while (BNO086_receivePacket() == 0)
 			{
 				if (counter++ > 100)
 					return (0); //Give up
@@ -616,32 +616,32 @@ int BNO080_readFRSdata(uint16_t recordID, uint8_t startLocation, uint8_t wordsTo
 //Read all advertisement packets from sensor
 //The sensor has been seen to reset twice if we attempt too much too quickly.
 //This seems to work reliably.
-void BNO080_softReset(void)
+void BNO086_softReset(void)
 {
 	shtpData[0] = 1; //Reset
 
 	//Attempt to start communication with sensor
-	BNO080_sendPacket(CHANNEL_EXECUTABLE, 1); //Transmit packet on channel 1, 1 byte
+	BNO086_sendPacket(CHANNEL_EXECUTABLE, 1); //Transmit packet on channel 1, 1 byte
 
 	//Read all incoming data and flush it
 	HAL_Delay(50);
-	while (BNO080_receivePacket() == 1);
+	while (BNO086_receivePacket() == 1);
 	HAL_Delay(50);
-	while (BNO080_receivePacket() == 1);
+	while (BNO086_receivePacket() == 1);
 }
 
 //Get the reason for the last reset
 //1 = POR, 2 = Internal reset, 3 = Watchdog, 4 = External reset, 5 = Other
-uint8_t BNO080_resetReason()
+uint8_t BNO086_resetReason()
 {
 	shtpData[0] = SHTP_REPORT_PRODUCT_ID_REQUEST; //Request the product ID and reset info
 	shtpData[1] = 0;							  //Reserved
 
 	//Transmit packet on channel 2, 2 bytes
-	BNO080_sendPacket(CHANNEL_CONTROL, 2);
+	BNO086_sendPacket(CHANNEL_CONTROL, 2);
 
 	//Now we wait for response
-	if (BNO080_receivePacket() == 1)
+	if (BNO086_receivePacket() == 1)
 	{
 		if (shtpData[0] == SHTP_REPORT_PRODUCT_ID_RESPONSE)
 		{
@@ -654,106 +654,106 @@ uint8_t BNO080_resetReason()
 
 //Given a register value and a Q point, convert to float
 //See https://en.wikipedia.org/wiki/Q_(number_format)
-float BNO080_qToFloat(int16_t fixedPointValue, uint8_t qPoint)
+float BNO086_qToFloat(int16_t fixedPointValue, uint8_t qPoint)
 {
 	return fixedPointValue * powf(2, qPoint * -1);
 }
 
 //Sends the packet to enable the rotation vector
-void BNO080_enableRotationVector(uint16_t timeBetweenReports)
+void BNO086_enableRotationVector(uint16_t timeBetweenReports)
 {
-	BNO080_setFeatureCommand(SENSOR_REPORTID_ROTATION_VECTOR, timeBetweenReports, 0);
+	BNO086_setFeatureCommand(SENSOR_REPORTID_ROTATION_VECTOR, timeBetweenReports, 0);
 }
 
 //Sends the packet to enable the rotation vector
-void BNO080_enableGameRotationVector(uint16_t timeBetweenReports)
+void BNO086_enableGameRotationVector(uint16_t timeBetweenReports)
 {
-	BNO080_setFeatureCommand(SENSOR_REPORTID_GAME_ROTATION_VECTOR, timeBetweenReports, 0);
+	BNO086_setFeatureCommand(SENSOR_REPORTID_GAME_ROTATION_VECTOR, timeBetweenReports, 0);
 }
 
 //Sends the packet to enable the accelerometer
-void BNO080_enableAccelerometer(uint16_t timeBetweenReports)
+void BNO086_enableAccelerometer(uint16_t timeBetweenReports)
 {
-	BNO080_setFeatureCommand(SENSOR_REPORTID_ACCELEROMETER, timeBetweenReports, 0);
+	BNO086_setFeatureCommand(SENSOR_REPORTID_ACCELEROMETER, timeBetweenReports, 0);
 }
 
 //Sends the packet to enable the accelerometer
-void BNO080_enableLinearAccelerometer(uint16_t timeBetweenReports)
+void BNO086_enableLinearAccelerometer(uint16_t timeBetweenReports)
 {
-	BNO080_setFeatureCommand(SENSOR_REPORTID_LINEAR_ACCELERATION, timeBetweenReports, 0);
+	BNO086_setFeatureCommand(SENSOR_REPORTID_LINEAR_ACCELERATION, timeBetweenReports, 0);
 }
 
 //Sends the packet to enable the gyro
-void BNO080_enableGyro(uint16_t timeBetweenReports)
+void BNO086_enableGyro(uint16_t timeBetweenReports)
 {
-	BNO080_setFeatureCommand(SENSOR_REPORTID_GYROSCOPE, timeBetweenReports, 0);
+	BNO086_setFeatureCommand(SENSOR_REPORTID_GYROSCOPE, timeBetweenReports, 0);
 }
 
 //Sends the packet to enable the magnetometer
-void BNO080_enableMagnetometer(uint16_t timeBetweenReports)
+void BNO086_enableMagnetometer(uint16_t timeBetweenReports)
 {
-	BNO080_setFeatureCommand(SENSOR_REPORTID_MAGNETIC_FIELD, timeBetweenReports, 0);
+	BNO086_setFeatureCommand(SENSOR_REPORTID_MAGNETIC_FIELD, timeBetweenReports, 0);
 }
 
 //Sends the packet to enable the step counter
-void BNO080_enableStepCounter(uint16_t timeBetweenReports)
+void BNO086_enableStepCounter(uint16_t timeBetweenReports)
 {
-	BNO080_setFeatureCommand(SENSOR_REPORTID_STEP_COUNTER, timeBetweenReports, 0);
+	BNO086_setFeatureCommand(SENSOR_REPORTID_STEP_COUNTER, timeBetweenReports, 0);
 }
 
 //Sends the packet to enable the Stability Classifier
-void BNO080_enableStabilityClassifier(uint16_t timeBetweenReports)
+void BNO086_enableStabilityClassifier(uint16_t timeBetweenReports)
 {
-	BNO080_setFeatureCommand(SENSOR_REPORTID_STABILITY_CLASSIFIER, timeBetweenReports, 0);
+	BNO086_setFeatureCommand(SENSOR_REPORTID_STABILITY_CLASSIFIER, timeBetweenReports, 0);
 }
 
 //Sends the commands to begin calibration of the accelerometer
-void BNO080_calibrateAccelerometer()
+void BNO086_calibrateAccelerometer()
 {
-	BNO080_sendCalibrateCommand(CALIBRATE_ACCEL);
+	BNO086_sendCalibrateCommand(CALIBRATE_ACCEL);
 }
 
 //Sends the commands to begin calibration of the gyro
-void BNO080_calibrateGyro()
+void BNO086_calibrateGyro()
 {
-	BNO080_sendCalibrateCommand(CALIBRATE_GYRO);
+	BNO086_sendCalibrateCommand(CALIBRATE_GYRO);
 }
 
 //Sends the commands to begin calibration of the magnetometer
-void BNO080_calibrateMagnetometer()
+void BNO086_calibrateMagnetometer()
 {
-	BNO080_sendCalibrateCommand(CALIBRATE_MAG);
+	BNO086_sendCalibrateCommand(CALIBRATE_MAG);
 }
 
 //Sends the commands to begin calibration of the planar accelerometer
-void BNO080_calibratePlanarAccelerometer()
+void BNO086_calibratePlanarAccelerometer()
 {
-	BNO080_sendCalibrateCommand(CALIBRATE_PLANAR_ACCEL);
+	BNO086_sendCalibrateCommand(CALIBRATE_PLANAR_ACCEL);
 }
 
 //See 2.2 of the Calibration Procedure document 1000-4044
-void BNO080_calibrateAll()
+void BNO086_calibrateAll()
 {
-	BNO080_sendCalibrateCommand(CALIBRATE_ACCEL_GYRO_MAG);
+	BNO086_sendCalibrateCommand(CALIBRATE_ACCEL_GYRO_MAG);
 }
 
-void BNO080_endCalibration()
+void BNO086_endCalibration()
 {
-	BNO080_sendCalibrateCommand(CALIBRATE_STOP); //Disables all calibrations
+	BNO086_sendCalibrateCommand(CALIBRATE_STOP); //Disables all calibrations
 }
 
 //See page 51 of reference manual - ME Calibration Response
 //Byte 5 is parsed during the readPacket and stored in calibrationStatus
-int BNO080_calibrationComplete()
+int BNO086_calibrationComplete()
 {
 	if (calibrationStatus == 0)
 		return (1);
 	return (0);
 }
 
-//Given a sensor's report ID, this tells the BNO080 to begin reporting the values
+//Given a sensor's report ID, this tells the BNO086 to begin reporting the values
 //Also sets the specific config word. Useful for personal activity classifier
-void BNO080_setFeatureCommand(uint8_t reportID, uint32_t microsBetweenReports, uint32_t specificConfig)
+void BNO086_setFeatureCommand(uint8_t reportID, uint32_t microsBetweenReports, uint32_t specificConfig)
 {
 	shtpData[0] = SHTP_REPORT_SET_FEATURE_COMMAND;	 //Set feature command. Reference page 55
 	shtpData[1] = reportID;						 //Feature Report ID. 0x01 = Accelerometer, 0x05 = Rotation vector
@@ -774,13 +774,13 @@ void BNO080_setFeatureCommand(uint8_t reportID, uint32_t microsBetweenReports, u
 	shtpData[16] = (specificConfig >> 24) & 0xFF;	 //Sensor-specific config (MSB)
 
 	//Transmit packet on channel 2, 17 bytes
-	BNO080_sendPacket(CHANNEL_CONTROL, 17);
+	BNO086_sendPacket(CHANNEL_CONTROL, 17);
 }
 
 //Tell the sensor to do a command
 //See 6.3.8 page 41, Command request
 //The caller is expected to set P0 through P8 prior to calling
-void BNO080_sendCommand(uint8_t command)
+void BNO086_sendCommand(uint8_t command)
 {
 	shtpData[0] = SHTP_REPORT_COMMAND_REQUEST; //Command Request
 	shtpData[1] = commandSequenceNumber++;	 //Increments automatically each function call
@@ -798,12 +798,12 @@ void BNO080_sendCommand(uint8_t command)
 	shtpData[11] = 0;*/
 
 	//Transmit packet on channel 2, 12 bytes
-	BNO080_sendPacket(CHANNEL_CONTROL, 12);
+	BNO086_sendPacket(CHANNEL_CONTROL, 12);
 }
 
-//This tells the BNO080 to begin calibrating
+//This tells the BNO086 to begin calibrating
 //See page 50 of reference manual and the 1000-4044 calibration doc
-void BNO080_sendCalibrateCommand(uint8_t thingToCalibrate)
+void BNO086_sendCalibrateCommand(uint8_t thingToCalibrate)
 {
 	/*shtpData[3] = 0; //P0 - Accel Cal Enable
 	shtpData[4] = 0; //P1 - Gyro Cal Enable
@@ -839,12 +839,12 @@ void BNO080_sendCalibrateCommand(uint8_t thingToCalibrate)
 	calibrationStatus = 1;
 
 	//Using this shtpData packet, send a command
-	BNO080_sendCommand(COMMAND_ME_CALIBRATE);
+	BNO086_sendCommand(COMMAND_ME_CALIBRATE);
 }
 
-//Request ME Calibration Status from BNO080
+//Request ME Calibration Status from BNO086
 //See page 51 of reference manual
-void BNO080_requestCalibrationStatus()
+void BNO086_requestCalibrationStatus()
 {
 	/*shtpData[3] = 0; //P0 - Reserved
 	shtpData[4] = 0; //P1 - Reserved
@@ -862,12 +862,12 @@ void BNO080_requestCalibrationStatus()
 	shtpData[6] = 0x01; //P3 - 0x01 - Subcommand: Get ME Calibration
 
 	//Using this shtpData packet, send a command
-	BNO080_sendCommand(COMMAND_ME_CALIBRATE);
+	BNO086_sendCommand(COMMAND_ME_CALIBRATE);
 }
 
-//This tells the BNO080 to save the Dynamic Calibration Data (DCD) to flash
+//This tells the BNO086 to save the Dynamic Calibration Data (DCD) to flash
 //See page 49 of reference manual and the 1000-4044 calibration doc
-void BNO080_saveCalibration()
+void BNO086_saveCalibration()
 {
 	/*shtpData[3] = 0; //P0 - Reserved
 	shtpData[4] = 0; //P1 - Reserved
@@ -883,17 +883,17 @@ void BNO080_saveCalibration()
 		shtpData[x] = 0;
 
 	//Using this shtpData packet, send a command
-	BNO080_sendCommand(COMMAND_DCD); //Save DCD command
+	BNO086_sendCommand(COMMAND_DCD); //Save DCD command
 }
 
-//Blocking wait for BNO080 to assert (pull low) the INT pin
+//Blocking wait for BNO086 to assert (pull low) the INT pin
 //indicating it's ready for comm. Can take more than 104ms
 //after a hardware reset
-int BNO080_waitForSPI(void)
+int BNO086_waitForSPI(void)
 {
 	for (uint32_t counter = 0; counter < 0xffffffff; counter++) //Don't got more than 255
 	{
-		if (HAL_GPIO_ReadPin(BNO080_INT_PORT, BNO080_INT_PIN) == 0)
+		if (HAL_GPIO_ReadPin(BNO086_INT_PORT, BNO086_INT_PIN) == 0)
 		{
 //			printf("\nData available\n");
 			return (1);
@@ -907,17 +907,17 @@ int BNO080_waitForSPI(void)
 
 //Check to see if there is any new data available
 //Read the contents of the incoming packet into the shtpData array
-int BNO080_receivePacket(void)
+int BNO086_receivePacket(void)
 {
 	uint8_t incoming;
-	if (HAL_GPIO_ReadPin(BNO080_INT_PORT, BNO080_INT_PIN) == 1)
+	if (HAL_GPIO_ReadPin(BNO086_INT_PORT, BNO086_INT_PIN) == 1)
 		return (0); //Data is not available
 
-	//Old way: if (BNO080_waitForSPI() == 0) return (0); //Something went wrong
+	//Old way: if (BNO086_waitForSPI() == 0) return (0); //Something went wrong
 
 	//Get first four bytes to find out how much data we need to read
 
-	CHIP_SELECT(BNO080); // Todo
+	CHIP_SELECT(BNO086); // Todo
 //	HAL_GPIO_WritePin(CS_GPIO_Port,CS_Pin, GPIO_PIN_RESET);
 
 	//Get the first four bytes, aka the packet header
@@ -951,12 +951,12 @@ int BNO080_receivePacket(void)
 	{
 		incoming = SPI2_SendByte(0xFF);
 //		printf("%d ", incoming);
-		if (dataSpot < MAX_PACKET_SIZE)	//BNO080 can respond with upto 270 bytes, avoid overflow
+		if (dataSpot < MAX_PACKET_SIZE)	//BNO086 can respond with upto 270 bytes, avoid overflow
 			shtpData[dataSpot] = incoming; //Store data into the shtpData array
 	}
 //	printf("\n");
 
-	CHIP_DESELECT(BNO080); // Todo Release BNO080
+	CHIP_DESELECT(BNO086); // Todo Release BNO086
 	return (1); //We're done!
 }
 
@@ -964,17 +964,17 @@ int BNO080_receivePacket(void)
 //Given the data packet, send the header then the data
 //Returns false if sensor does not ACK
 // - Arduino has a max 32 byte send. Break sending into multi packets if needed.
-int BNO080_sendPacket(uint8_t channelNumber, uint8_t dataLength)
+int BNO086_sendPacket(uint8_t channelNumber, uint8_t dataLength)
 {
 	uint8_t packetLength = dataLength + 4; //Add four bytes for the header
 
-	//Wait for BNO080 to indicate it is available for communication
-	if (BNO080_waitForSPI() == 0)
+	//Wait for BNO086 to indicate it is available for communication
+	if (BNO086_waitForSPI() == 0)
 		return (0); //Data is not available
 
-	//BNO080 has max CLK of 3MHz, MSB first,
-	//The BNO080 uses CPOL = 1 and CPHA = 1. This is mode3
-	CHIP_SELECT(BNO080); // Todo
+	//BNO086 has max CLK of 3MHz, MSB first,
+	//The BNO086 uses CPOL = 1 and CPHA = 1. This is mode3
+	CHIP_SELECT(BNO086); // Todo
 
 	//Send the 4 byte packet header
 	SPI2_SendByte(packetLength & 0xFF);			//Packet length LSB
@@ -988,16 +988,16 @@ int BNO080_sendPacket(uint8_t channelNumber, uint8_t dataLength)
 		SPI2_SendByte(shtpData[i]);
 	}
 
-	CHIP_DESELECT(BNO080); // Todo
+	CHIP_DESELECT(BNO086); // Todo
 
 	return (1);
 }
 
 float getRoll(uint8_t unit){
-	float dqx = BNO080_getQuatI();
-	float dqy = BNO080_getQuatJ();
-	float dqz = BNO080_getQuatK();
-	float dqw = BNO080_getQuatReal();
+	float dqx = BNO086_getQuatI();
+	float dqy = BNO086_getQuatJ();
+	float dqz = BNO086_getQuatK();
+	float dqw = BNO086_getQuatReal();
 
 	float norm = sqrt(dqw*dqw + dqx*dqx + dqy*dqy + dqz*dqz);
 
@@ -1020,10 +1020,10 @@ float getRoll(uint8_t unit){
 }
 
 float getPitch(uint8_t unit){
-	float dqx = BNO080_getQuatI();
-	float dqy = BNO080_getQuatJ();
-	float dqz = BNO080_getQuatK();
-	float dqw = BNO080_getQuatReal();
+	float dqx = BNO086_getQuatI();
+	float dqy = BNO086_getQuatJ();
+	float dqz = BNO086_getQuatK();
+	float dqw = BNO086_getQuatReal();
 
 	float norm = sqrt(dqw*dqw + dqx*dqx + dqy*dqy + dqz*dqz);
 
@@ -1062,10 +1062,10 @@ float getPitch(uint8_t unit){
 }
 
 float getYaw(uint8_t unit){
-	float dqx = BNO080_getQuatI();
-	float dqy = BNO080_getQuatJ();
-	float dqz = BNO080_getQuatK();
-	float dqw = BNO080_getQuatReal();
+	float dqx = BNO086_getQuatI();
+	float dqy = BNO086_getQuatJ();
+	float dqz = BNO086_getQuatK();
+	float dqw = BNO086_getQuatReal();
 
 	float norm = sqrt(dqw*dqw + dqx*dqx + dqy*dqy + dqz*dqz);
 
@@ -1094,26 +1094,26 @@ void BNO086_getData(BNO086_t *bno, RPY_UNIT rpy_unit){
 	 * rpy_unit = 0 set the roll,pitch and yaw unit as Radian
 	 * rpy_unit = 1 set the roll,pitch and yaw unit as Degree */
 
-		bno->quaternion.i = BNO080_getQuatI();
-		bno->quaternion.j = BNO080_getQuatJ();
-		bno->quaternion.k = BNO080_getQuatK();
-		bno->quaternion.w = BNO080_getQuatReal();
+		bno->quaternion.i = BNO086_getQuatI();
+		bno->quaternion.j = BNO086_getQuatJ();
+		bno->quaternion.k = BNO086_getQuatK();
+		bno->quaternion.w = BNO086_getQuatReal();
 
-		bno->acceleration.x = BNO080_getAccelX();
-		bno->acceleration.y = BNO080_getAccelY();
-		bno->acceleration.z = BNO080_getAccelZ();
+		bno->acceleration.x = BNO086_getAccelX();
+		bno->acceleration.y = BNO086_getAccelY();
+		bno->acceleration.z = BNO086_getAccelZ();
 
-		bno->linear_acceleration.x = BNO080_getLinAccelX();
-		bno->linear_acceleration.y = BNO080_getLinAccelY();
-		bno->linear_acceleration.z = BNO080_getLinAccelZ();
+		bno->linear_acceleration.x = BNO086_getLinAccelX();
+		bno->linear_acceleration.y = BNO086_getLinAccelY();
+		bno->linear_acceleration.z = BNO086_getLinAccelZ();
 
-		bno->angular_velocity.x = BNO080_getGyroX();
-		bno->angular_velocity.y = BNO080_getGyroY();
-		bno->angular_velocity.z = BNO080_getGyroZ();
+		bno->angular_velocity.x = BNO086_getGyroX();
+		bno->angular_velocity.y = BNO086_getGyroY();
+		bno->angular_velocity.z = BNO086_getGyroZ();
 
-		bno->magnetometer.x = BNO080_getMagX();
-		bno->magnetometer.y = BNO080_getMagY();
-		bno->magnetometer.z = BNO080_getMagZ();
+		bno->magnetometer.x = BNO086_getMagX();
+		bno->magnetometer.y = BNO086_getMagY();
+		bno->magnetometer.z = BNO086_getMagZ();
 
 		bno->euler_angle.roll = getRoll(rpy_unit);
 		bno->euler_angle.pitch = getPitch(rpy_unit);
@@ -1123,59 +1123,63 @@ void BNO086_getData(BNO086_t *bno, RPY_UNIT rpy_unit){
 
 }
 
-void SAVEIMU_HSEM(BNO086_t *bno){
+void BNO086_SAVE_HSEM(BNO086_t *bno){
 	if(HAL_HSEM_FastTake(HSEM_ID_0) == HAL_OK){
-		SRAM4->Data[0] = bno->quaternion.i;
-		SRAM4->Data[1] = bno->quaternion.j;
-		SRAM4->Data[2] = bno->quaternion.k;
-		SRAM4->Data[3] = bno->quaternion.w;
+		  SRAM4_BNO086->Data[0] = bno->euler_angle.roll;
+		  SRAM4_BNO086->Data[1] = bno->euler_angle.pitch;
+		  SRAM4_BNO086->Data[2] = bno->euler_angle.yaw;
 
-		SRAM4->Data[4] = bno->linear_acceleration.x;
-		SRAM4->Data[5] = bno->linear_acceleration.y;
-		SRAM4->Data[6] = bno->linear_acceleration.z;
+		  SRAM4_BNO086->Data[0] = bno->quaternion.i;
+		  SRAM4_BNO086->Data[1] = bno->quaternion.j;
+		  SRAM4_BNO086->Data[2] = bno->quaternion.k;
+		  SRAM4_BNO086->Data[3] = bno->quaternion.w;
 
-		SRAM4->Data[7] = bno->angular_velocity.x;
-		SRAM4->Data[8] = bno->angular_velocity.y;
-		SRAM4->Data[9] = bno->angular_velocity.z;
+		  SRAM4_BNO086->Data[4] = bno->linear_acceleration.x;
+		  SRAM4_BNO086->Data[5] = bno->linear_acceleration.y;
+		  SRAM4_BNO086->Data[6] = bno->linear_acceleration.z;
 
-		SRAM4->Data[10] = bno->magnetometer.x;
-		SRAM4->Data[11] = bno->magnetometer.y;
-		SRAM4->Data[12] = bno->magnetometer.z;
+		  SRAM4_BNO086->Data[7] = bno->angular_velocity.x;
+		  SRAM4_BNO086->Data[8] = bno->angular_velocity.y;
+		  SRAM4_BNO086->Data[9] = bno->angular_velocity.z;
 
-		SRAM4->Data[13] = bno->acceleration.x;
-		SRAM4->Data[14] = bno->acceleration.y;
-		SRAM4->Data[15] = bno->acceleration.z;
+		  SRAM4_BNO086->Data[10] = bno->magnetometer.x;
+		  SRAM4_BNO086->Data[11] = bno->magnetometer.y;
+		  SRAM4_BNO086->Data[12] = bno->magnetometer.z;
 
-		SRAM4->Data[16] = bno->euler_angle.roll;
-		SRAM4->Data[17] = bno->euler_angle.pitch;
-		SRAM4->Data[18] = bno->euler_angle.yaw;
+		  SRAM4_BNO086->Data[13] = bno->acceleration.x;
+		  SRAM4_BNO086->Data[14] = bno->acceleration.y;
+		  SRAM4_BNO086->Data[15] = bno->acceleration.z;
+
+		  SRAM4_BNO086->Data[16] = bno->euler_angle.roll;
+		  SRAM4_BNO086->Data[17] = bno->euler_angle.pitch;
+		  SRAM4_BNO086->Data[18] = bno->euler_angle.yaw;
 
 		  HAL_HSEM_Release(HSEM_ID_0,0);
 		}
 }
 
-void BNO080_Calibration(CalibrateStatus *calib)
+void BNO086_Calibration(BNO086_t *bno, CalibrateStatus *calib)
 {
 	if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET) {
 
 		mode = 1;
 		// Resets BNO086 to disable all output
-		BNO080_Initialization(&BNO086);
+		BNO086_Initialization(&bno);
 
 		// Enable dynamic calibration for accelerometer, gyroscope, and magnetometer
 		// Enable Game Rotation Vector output
 		// Enable Rotation Vector output
 		// Enable Magnetic Field output
-		BNO080_calibrateAll(); // Turn on calibration for Accel, Gyro, and Mag
-		BNO080_enableGameRotationVector(10000); // Send data update every 20ms (50Hz)
-//		BNO080_enableRotationVector(2500);
-		BNO080_enableAccelerometer(2000);
-		BNO080_enableGyro(2500);
-		BNO080_enableMagnetometer(10000); // Send data update every 20ms (50Hz)
+		BNO086_calibrateAll(); // Turn on calibration for Accel, Gyro, and Mag
+		BNO086_enableGameRotationVector(10000); // Send data update every 20ms (50Hz)
+//		BNO086_enableRotationVector(2500);
+		BNO086_enableAccelerometer(2000);
+		BNO086_enableGyro(2500);
+		BNO086_enableMagnetometer(10000); // Send data update every 20ms (50Hz)
 
 		while (mode == 1 || mode == 2)
 		{
-			if (BNO080_dataAvailable() == 1)
+			if (BNO086_dataAvailable() == 1)
 			{
 
 				if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_RESET) {
@@ -1185,12 +1189,12 @@ void BNO080_Calibration(CalibrateStatus *calib)
 					mode = 3;
 					break;
 				}
-				BNO086_getData(&BNO086, UNIT_DEG);
+				BNO086_getData(&bno, UNIT_DEG);
 				// Observing the status bit of the sensors output
-				accuracyQuat = BNO080_getQuatAccuracy();
-				accuracyAccel = BNO080_getAccelAccuracy();
-				accuracyGyro = BNO080_getGyroAccuracy();
-				accuracyMag = BNO080_getMagAccuracy();
+				accuracyQuat = BNO086_getQuatAccuracy();
+				accuracyAccel = BNO086_getAccelAccuracy();
+				accuracyGyro = BNO086_getGyroAccuracy();
+				accuracyMag = BNO086_getMagAccuracy();
 
 				if (accuracyQuat == 0) calib->accuracyQuat = UNRELIABLE;
 				else if (accuracyQuat == 1) calib->accuracyQuat = LOW;
@@ -1232,18 +1236,18 @@ void BNO080_Calibration(CalibrateStatus *calib)
 		HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET);
 
 		// Save current dynamic calibration data (DCD) to memory
-		BNO080_saveCalibration();
-		BNO080_requestCalibrationStatus();
+		BNO086_saveCalibration();
+		BNO086_requestCalibrationStatus();
 
 		// Wait for calibration response, timeout if no response
 		int counter = 100;
 		while (1)
 		{
 			if (--counter == 0) break;
-			if (BNO080_dataAvailable())
+			if (BNO086_dataAvailable())
 			{
 				// Wait for ME Calibration Response Status byte to go to zero
-				if (BNO080_calibrationComplete() == 1)
+				if (BNO086_calibrationComplete() == 1)
 				{
 					calib->CalibrationData = STORED_SUCCESSFULLY;
 					break;
@@ -1260,40 +1264,37 @@ void BNO080_Calibration(CalibrateStatus *calib)
 }
 #else
 
-void READIMU_HSEM(BNO086_t *bno){
+void BNO086_READ_HSEM(BNO086_t *bno){
     if (HAL_HSEM_FastTake(HSEM_ID_0) == HAL_OK){
-    	bno->quaternion.i = SRAM4->Data[0];
-		bno->quaternion.j = SRAM4->Data[1];
-		bno->quaternion.k = SRAM4->Data[2];
-		bno->quaternion.w = SRAM4->Data[3];
+    	bno->quaternion.i = SRAM4_BNO086->Data[0];
+		bno->quaternion.j = SRAM4_BNO086->Data[1];
+		bno->quaternion.k = SRAM4_BNO086->Data[2];
+		bno->quaternion.w = SRAM4_BNO086->Data[3];
 
-		bno->linear_acceleration.x = SRAM4->Data[4];
-		bno->linear_acceleration.y = SRAM4->Data[5];
-		bno->linear_acceleration.z = SRAM4->Data[6];
+		bno->linear_acceleration.x = SRAM4_BNO086->Data[4];
+		bno->linear_acceleration.y = SRAM4_BNO086->Data[5];
+		bno->linear_acceleration.z = SRAM4_BNO086->Data[6];
 
-		bno->angular_velocity.x = SRAM4->Data[7];
-		bno->angular_velocity.y = SRAM4->Data[8];
-		bno->angular_velocity.z = SRAM4->Data[9];
+		bno->angular_velocity.x = SRAM4_BNO086->Data[7];
+		bno->angular_velocity.y = SRAM4_BNO086->Data[8];
+		bno->angular_velocity.z = SRAM4_BNO086->Data[9];
 
-		bno->magnetometer.x = SRAM4->Data[10];
-		bno->magnetometer.y = SRAM4->Data[11];
-		bno->magnetometer.z = SRAM4->Data[12];
+		bno->magnetometer.x = SRAM4_BNO086->Data[10];
+		bno->magnetometer.y = SRAM4_BNO086->Data[11];
+		bno->magnetometer.z = SRAM4_BNO086->Data[12];
 
-		bno->acceleration.x = SRAM4->Data[13];
-		bno->acceleration.y = SRAM4->Data[14];
-		bno->acceleration.z = SRAM4->Data[15];
+		bno->acceleration.x = SRAM4_BNO086->Data[13];
+		bno->acceleration.y = SRAM4_BNO086->Data[14];
+		bno->acceleration.z = SRAM4_BNO086->Data[15];
 
 
-		bno->euler_angle.roll = SRAM4->Data[16];
-		bno->euler_angle.pitch = SRAM4->Data[17];
-		bno->euler_angle.yaw = SRAM4->Data[18];
+		bno->euler_angle.roll = SRAM4_BNO086->Data[16];
+		bno->euler_angle.pitch = SRAM4_BNO086->Data[17];
+		bno->euler_angle.yaw = SRAM4_BNO086->Data[18];
         HAL_HSEM_Release(HSEM_ID_0, 0);
     }
 }
 
 #endif
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////

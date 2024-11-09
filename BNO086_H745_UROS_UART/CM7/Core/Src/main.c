@@ -41,7 +41,7 @@
 #include <std_msgs/msg/float32.h>
 #include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/magnetic_field.h>
-#include "BNO086_SPI/BNO086_SPI.h"
+#include <BNO086_SPI/BNO086_SPI.h>
 //#include "SRAM4.h"
 
 /* USER CODE END Includes */
@@ -53,13 +53,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
-#ifndef HSEM_ID_0
-#define HSEM_ID_0 (0U) /* HW semaphore 0*/
-#endif
 #define RCCHECK(fn) if(fn != RCL_RET_OK) {};
-
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -77,16 +71,22 @@ rcl_init_options_t init_options;
 rclc_executor_t executor;
 rcl_timer_t timer_;
 
-rcl_publisher_t imu_pub;
-sensor_msgs__msg__Imu imu_msg;
+rcl_publisher_t bno086_imu_pub;
+sensor_msgs__msg__Imu bno086_imu_msg;
 
-rcl_publisher_t magnetic_field_pub;
-sensor_msgs__msg__MagneticField magnetic_field_msg;
+rcl_publisher_t bno086_magnetic_field_pub;
+sensor_msgs__msg__MagneticField bno086_magnetic_field_msg;
 
-BNO086_t imu;
-double roll,pitch,yaw;
+rcl_publisher_t bno055_imu_pub;
+sensor_msgs__msg__Imu bno055_imu_msg;
 
-uint8_t HSEM_FLAG = 0;
+rcl_publisher_t bno055_magnetic_field_pub;
+sensor_msgs__msg__MagneticField bno055_magnetic_field_msg;
+
+
+uint8_t HSEM1_FLAG = 0;
+
+BNO086_t IMU_086;
 
 
 /* USER CODE END PV */
@@ -104,7 +104,7 @@ void * microros_allocate(size_t size, void * state);
 void microros_deallocate(void * pointer, void * state);
 void * microros_reallocate(void * pointer, size_t size, void * state);
 void * microros_zero_allocate(size_t number_of_elements, size_t size_of_element, void * state);
-void SensorsPublished();
+void BNO055_Published();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -272,49 +272,48 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 {
 	if (timer != NULL) {
 
-			if(HSEM_FLAG == 1){
-				HSEM_FLAG = 0;
-				READIMU_HSEM(&imu);
-			}
-			SensorsPublished();
-
-			// Synchronize time with the agent
-			rmw_uros_sync_session(1000);
-			HAL_IWDG_Refresh(&hiwdg1);
+		if(HSEM1_FLAG == 1){
+			HSEM1_FLAG = 0;
+			BNO086_READ_HSEM(&IMU_086);
+			BNO086_Published();
 		}
+
+		// Synchronize time with the agent
+		rmw_uros_sync_session(1000);
+		HAL_IWDG_Refresh(&hiwdg1);
+	}
 
 }
 
-void SensorsPublished(){
+void BNO086_Published(){
 
-	imu_msg.orientation.x = imu.quaternion.i;
-	imu_msg.orientation.x = imu.quaternion.i;
-	imu_msg.orientation.x = imu.quaternion.i;
+	bno086_imu_msg.orientation.x = IMU_086.quaternion.i;
+	bno086_imu_msg.orientation.y = IMU_086.quaternion.j;
+	bno086_imu_msg.orientation.z = IMU_086.quaternion.k;
+	bno086_imu_msg.orientation.w = IMU_086.quaternion.w;
 
-	/*imu.acceleration.x;
-	 * imu.acceleration.y;
-	 * imu.acceleration.x; For Acceleration data (g)*/
+	/*IMU_086.acceleration.x;
+	 * IMU_086.acceleration.y;
+	 * IMU_086.acceleration.z; For Acceleration data (g)*/
 
-	imu_msg.linear_acceleration.x = imu.linear_acceleration.x;
-	imu_msg.linear_acceleration.y = imu.linear_acceleration.y;
-	imu_msg.linear_acceleration.z = imu.linear_acceleration.z;
+	bno086_imu_msg.linear_acceleration.x = IMU_086.linear_acceleration.x;
+	bno086_imu_msg.linear_acceleration.y = IMU_086.linear_acceleration.y;
+	bno086_imu_msg.linear_acceleration.z = IMU_086.linear_acceleration.z;
 
-	imu_msg.angular_velocity.x = imu.angular_velocity.x;
-	imu_msg.angular_velocity.y = imu.angular_velocity.y;
-	imu_msg.angular_velocity.z = imu.angular_velocity.z;
+	bno086_imu_msg.angular_velocity.x = IMU_086.angular_velocity.x;
+	bno086_imu_msg.angular_velocity.y = IMU_086.angular_velocity.y;
+	bno086_imu_msg.angular_velocity.z = IMU_086.angular_velocity.z;
 
-	magnetic_field_msg.magnetic_field.x = imu.magnetometer.x;
-	magnetic_field_msg.magnetic_field.y = imu.magnetometer.y;
-	magnetic_field_msg.magnetic_field.z = imu.magnetometer.z;
+	bno086_magnetic_field_msg.magnetic_field.x = IMU_086.magnetometer.x;
+	bno086_magnetic_field_msg.magnetic_field.y = IMU_086.magnetometer.y;
+	bno086_magnetic_field_msg.magnetic_field.z = IMU_086.magnetometer.z;
 
-	/*imu.euler_angle.roll;
-	 * imu.euler_angle.pitch;
-	 * imu.euler_angle.yaw; For Euler Angle data (degree)*/
+	/*IMU_086.euler_angle.roll;
+	 * IMU_086.euler_angle.pitch;
+	 * IMU_086.euler_angle.yaw; For Euler Angle data (degree)*/
 
-	RCCHECK(rcl_publish(&imu_pub, &imu_msg, NULL));
-	RCCHECK(rcl_publish(&magnetic_field_pub, &magnetic_field_msg, NULL));
-
-
+	RCCHECK(rcl_publish(&bno086_imu_pub, &bno086_imu_msg, NULL));
+	RCCHECK(rcl_publish(&bno086_magnetic_field_pub, &bno086_magnetic_field_msg, NULL));
 
 }
 void StartDefaultTask(void *argument)
@@ -358,21 +357,20 @@ void StartDefaultTask(void *argument)
    rclc_node_init_default(&node, "BNO086_node", "", &support);
 
   // create publisher
-  rclc_publisher_init_best_effort(
-    &imu_pub,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
-    "imu");
+   rclc_publisher_init_best_effort(
+       &bno086_imu_pub,
+       &node,
+       ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
+       "BNO086_IMU_Publihser");
 
-  rclc_publisher_init_best_effort(
-      &magnetic_field_pub,
-      &node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, MagneticField),
-      "magnetic_field");
+   rclc_publisher_init_best_effort(
+	 &bno086_magnetic_field_pub,
+	 &node,
+	 ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, MagneticField),
+	 "BNO086_MagneticField_Publihser");
 
-  imu_msg.header.frame_id = micro_ros_string_utilities_init("imu_frame");
-  magnetic_field_msg.header.frame_id = micro_ros_string_utilities_init("magnetic_field_frame");
-
+   bno055_imu_msg.header.frame_id = micro_ros_string_utilities_init("bno055_imu_frame");
+   bno055_magnetic_field_msg.header.frame_id = micro_ros_string_utilities_init("bno055_magnetic_field_frame");
   // create timer
   rclc_timer_init_default(&timer_, &support, RCL_MS_TO_NS(10), timer_callback);
 
@@ -391,10 +389,13 @@ void StartDefaultTask(void *argument)
   /* USER CODE END 5 */
 }
 
-//void HAL_HSEM_FreeCallback(uint32_t SemMask){
-//	HSEM_FLAG = 1;
-//	HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
-//}
+void HAL_HSEM_FreeCallback(uint32_t SemMask){
+	if (SemMask & (1 << HSEM_ID_0)) {
+		HSEM1_FLAG = 1;
+		HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+
+	}
+}
 
 /* USER CODE END 4 */
 

@@ -17,16 +17,16 @@
 #if __CORTEX_M == 4 // Only for CM7 core
 //////////////////////////////////////////////////////////////////////////
 // Definition for SPI2 (APB1 PCLK = 42MHz)
-#define BNO080_SPI_CHANNEL      SPI1
-#define BNO080_INT_PIN          INT_Pin
-#define BNO080_INT_PORT         INT_GPIO_Port
+#define BNO086_SPI_CHANNEL      SPI1
+#define BNO086_INT_PIN          INT_Pin
+#define BNO086_INT_PORT         INT_GPIO_Port
 
 
 // Chip Select, Wake, and Reset Control Macros (Modified for HAL)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
-#define CHIP_SELECT(BNO080)     HAL_GPIO_WritePin(CS_GPIO_Port,CS_Pin, GPIO_PIN_RESET)
-#define CHIP_DESELECT(BNO080)   HAL_GPIO_WritePin(CS_GPIO_Port,CS_Pin, GPIO_PIN_SET)
+#define CHIP_SELECT(BNO086)     HAL_GPIO_WritePin(CS_GPIO_Port,CS_Pin, GPIO_PIN_RESET)
+#define CHIP_DESELECT(BNO086)   HAL_GPIO_WritePin(CS_GPIO_Port,CS_Pin, GPIO_PIN_SET)
 
 #define WAKE_HIGH()             HAL_GPIO_WritePin(WAK_GPIO_Port, WAK_Pin, GPIO_PIN_SET)
 #define WAKE_LOW()              HAL_GPIO_WritePin(WAK_GPIO_Port, WAK_Pin, GPIO_PIN_RESET)
@@ -125,7 +125,7 @@ enum Registers
 };
 
 
-//All the ways we can configure or talk to the BNO080, figure 34, page 36 reference manual
+//All the ways we can configure or talk to the BNO086, figure 34, page 36 reference manual
 //These are used for low level communication with the sensor, on channel 2
 #define SHTP_REPORT_COMMAND_RESPONSE 0xF1
 #define SHTP_REPORT_COMMAND_REQUEST 0xF2
@@ -180,90 +180,89 @@ enum Registers
 #define MAX_PACKET_SIZE 128 //Packets can be up to 32k but we don't have that much RAM.
 #define MAX_METADATA_SIZE 9 //This is in words. There can be many but we mostly only care about the first 9 (Qs, range, etc)
 
-int BNO080_Initialization(BNO086_t *bno);
+int BNO086_Initialization(BNO086_t *bno);
 unsigned char SPI2_SendByte(unsigned char data);
 
-int BNO080_dataAvailable(void);
-void BNO080_parseCommandReport(void);
-void BNO080_parseInputReport(void);
+int BNO086_dataAvailable(void);
+void BNO086_parseCommandReport(void);
+void BNO086_parseInputReport(void);
 
-float BNO080_getQuatI();
-float BNO080_getQuatJ();
-float BNO080_getQuatK();
-float BNO080_getQuatReal();
-float BNO080_getQuatRadianAccuracy();
-uint8_t BNO080_getQuatAccuracy();
-float BNO080_getAccelX();
-float BNO080_getAccelY();
-float BNO080_getAccelZ();
-uint8_t BNO080_getAccelAccuracy();
-float BNO080_getLinAccelX();
-float BNO080_getLinAccelY();
-float BNO080_getLinAccelZ();
-uint8_t BNO080_getLinAccelAccuracy();
-float BNO080_getGyroX();
-float BNO080_getGyroY();
-float BNO080_getGyroZ();
-uint8_t BNO080_getGyroAccuracy();
-float BNO080_getMagX();
-float BNO080_getMagY();
-float BNO080_getMagZ();
-uint8_t BNO080_getMagAccuracy();
-uint16_t BNO080_getStepCount();
-uint8_t BNO080_getStabilityClassifier();
-uint8_t BNO080_getActivityClassifier();
-uint32_t BNO080_getTimeStamp();
-int16_t BNO080_getQ1(uint16_t recordID);
-int16_t BNO080_getQ2(uint16_t recordID);
-int16_t BNO080_getQ3(uint16_t recordID);
-float BNO080_getResolution(uint16_t recordID);
-float BNO080_getRange(uint16_t recordID);
+float BNO086_getQuatI();
+float BNO086_getQuatJ();
+float BNO086_getQuatK();
+float BNO086_getQuatReal();
+float BNO086_getQuatRadianAccuracy();
+uint8_t BNO086_getQuatAccuracy();
+float BNO086_getAccelX();
+float BNO086_getAccelY();
+float BNO086_getAccelZ();
+uint8_t BNO086_getAccelAccuracy();
+float BNO086_getLinAccelX();
+float BNO086_getLinAccelY();
+float BNO086_getLinAccelZ();
+uint8_t BNO086_getLinAccelAccuracy();
+float BNO086_getGyroX();
+float BNO086_getGyroY();
+float BNO086_getGyroZ();
+uint8_t BNO086_getGyroAccuracy();
+float BNO086_getMagX();
+float BNO086_getMagY();
+float BNO086_getMagZ();
+uint8_t BNO086_getMagAccuracy();
+uint16_t BNO086_getStepCount();
+uint8_t BNO086_getStabilityClassifier();
+uint8_t BNO086_getActivityClassifier();
+uint32_t BNO086_getTimeStamp();
+int16_t BNO086_getQ1(uint16_t recordID);
+int16_t BNO086_getQ2(uint16_t recordID);
+int16_t BNO086_getQ3(uint16_t recordID);
+float BNO086_getResolution(uint16_t recordID);
+float BNO086_getRange(uint16_t recordID);
 
-uint32_t BNO080_readFRSword(uint16_t recordID, uint8_t wordNumber);
-void BNO080_frsReadRequest(uint16_t recordID, uint16_t readOffset, uint16_t blockSize);
-int BNO080_readFRSdata(uint16_t recordID, uint8_t startLocation, uint8_t wordsToRead);
-void BNO080_softReset(void);
-uint8_t BNO080_resetReason();
+uint32_t BNO086_readFRSword(uint16_t recordID, uint8_t wordNumber);
+void BNO086_frsReadRequest(uint16_t recordID, uint16_t readOffset, uint16_t blockSize);
+int BNO086_readFRSdata(uint16_t recordID, uint8_t startLocation, uint8_t wordsToRead);
+void BNO086_softReset(void);
+uint8_t BNO086_resetReason();
 
-float BNO080_qToFloat(int16_t fixedPointValue, uint8_t qPoint);
+float BNO086_qToFloat(int16_t fixedPointValue, uint8_t qPoint);
 
-void BNO080_enableRotationVector(uint16_t timeBetweenReports);
-void BNO080_enableGameRotationVector(uint16_t timeBetweenReports);
-void BNO080_enableAccelerometer(uint16_t timeBetweenReports);
-void BNO080_enableLinearAccelerometer(uint16_t timeBetweenReports);
-void BNO080_enableGyro(uint16_t timeBetweenReports);
-void BNO080_enableMagnetometer(uint16_t timeBetweenReports);
-void BNO080_enableStepCounter(uint16_t timeBetweenReports);
-void BNO080_enableStabilityClassifier(uint16_t timeBetweenReports);
+void BNO086_enableRotationVector(uint16_t timeBetweenReports);
+void BNO086_enableGameRotationVector(uint16_t timeBetweenReports);
+void BNO086_enableAccelerometer(uint16_t timeBetweenReports);
+void BNO086_enableLinearAccelerometer(uint16_t timeBetweenReports);
+void BNO086_enableGyro(uint16_t timeBetweenReports);
+void BNO086_enableMagnetometer(uint16_t timeBetweenReports);
+void BNO086_enableStepCounter(uint16_t timeBetweenReports);
+void BNO086_enableStabilityClassifier(uint16_t timeBetweenReports);
 
-void BNO080_calibrateAccelerometer();
-void BNO080_calibrateGyro();
-void BNO080_calibrateMagnetometer();
-void BNO080_calibratePlanarAccelerometer();
-void BNO080_calibrateAll();
-void BNO080_endCalibration();
-int BNO080_calibrationComplete();
+void BNO086_calibrateAccelerometer();
+void BNO086_calibrateGyro();
+void BNO086_calibrateMagnetometer();
+void BNO086_calibratePlanarAccelerometer();
+void BNO086_calibrateAll();
+void BNO086_endCalibration();
+int BNO086_calibrationComplete();
 
-void BNO080_setFeatureCommand(uint8_t reportID, uint32_t microsBetweenReports, uint32_t specificConfig);
-void BNO080_sendCommand(uint8_t command);
-void BNO080_sendCalibrateCommand(uint8_t thingToCalibrate);
-void BNO080_requestCalibrationStatus();
-void BNO080_saveCalibration();
+void BNO086_setFeatureCommand(uint8_t reportID, uint32_t microsBetweenReports, uint32_t specificConfig);
+void BNO086_sendCommand(uint8_t command);
+void BNO086_sendCalibrateCommand(uint8_t thingToCalibrate);
+void BNO086_requestCalibrationStatus();
+void BNO086_saveCalibration();
 
-int BNO080_waitForSPI(void);
-int BNO080_receivePacket(void);
-int BNO080_sendPacket(uint8_t channelNumber, uint8_t dataLength);
+int BNO086_waitForSPI(void);
+int BNO086_receivePacket(void);
+int BNO086_sendPacket(uint8_t channelNumber, uint8_t dataLength);
 
 float getRoll(uint8_t unit);
 float getPitch(uint8_t unit);
 float getYaw(uint8_t unit);
 
 void BNO086_getData(BNO086_t *bno, RPY_UNIT rpy_unit);
-void SAVEIMU_HSEM(BNO086_t *bno);
-void READIMU_HSEM(BNO086_t *bno);
+void BNO086_SAVE_HSEM(BNO086_t *bno);
+void BNO086_READ_HSEM(BNO086_t *bno);
 
-void BNO080_Calibration(CalibrateStatus *calib);
-
+void BNO086_Calibration(BNO086_t *bno, CalibrateStatus *calib);
 
 
 #endif /* INC_BNO086_SPI_H_ */

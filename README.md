@@ -1,8 +1,12 @@
 # SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI
 
 # Introduction
+This setup for BNO086 (via SPI) with the STM32H745ZI-Q whitout micro-ROS (UROS). Data from this IMU is sent from the CM4 core to the CM7 core. You can implement your code in CM7 core and apply IMU data from CM4 core to your code.
 
-![system diagram](image/system_diagram.png)
+#### Reference 
+- BNO086: **[Product and Documents](https://www.sparkfun.com/products/22857)**
+
+![system diagram](image/system_diagram_no_uros.png)
 
 # Installation
 
@@ -79,7 +83,7 @@ Switch to **main.c** in ***BNO086_H745_NO_UROS_CM7 (in CM7)***.
 ![declare](image/declare_IMU_086.png)
 
 3. Getting data sensor from CM4 : 
-    - **BNO086_READ_HSEM(&IMU_086)** : Read the data from CM4 and store in the IMU_086 object.It work in in Infinite loop (USER CODE BEGIN 3).
+    - **BNO086_READ_HSEM(&IMU_086)** : Read the data from CM4 and store in the IMU_086 object. It work in in Infinite loop (USER CODE BEGIN 3).
 ![cm4_infiniteloop](image/Nouros_Infiniteloop_cm4.png)
 
 When you already debugged, you can add these below in **Live Expression**

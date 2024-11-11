@@ -167,4 +167,8 @@ ros2 topic echo /BNO086_IMU_Publihser
 [**STM32H7 Nucleo-144 boards (MB1363) - User manual**](https://www.st.com/resource/en/user_manual/um2408-stm32h7-nucleo144-boards-mb1363-stmicroelectronics.pdf)
 
 # Rotation angle convention of BNO086
-![rotation_angle](image/rotation_BNO086.png)
+- **Roll :** range +/- 180˚
+- **Pitch :** range +/- 90˚
+-  **Yaw :** range +/- 180˚
+
+**Rotation axis like lable on BNO086**

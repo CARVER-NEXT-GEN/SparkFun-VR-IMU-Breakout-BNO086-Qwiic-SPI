@@ -2,6 +2,11 @@
 
 # Introduction
 
+This setup for BNO086 (via SPI) with the STM32H745ZI-Q. Data from this IMU is sent from the CM4 core to the CM7 core, where CM7 publishes it using micro-ROS (UROS).
+
+#### Reference 
+- BNO086: **[Product and Documents](https://www.sparkfun.com/products/22857)**
+
 ![system diagram](image/system_diagram.png)
 
 # Installation
@@ -48,6 +53,8 @@ Click in **BNO086_H745_UROS_UART_CM7 Debug** and go to Startup, click Add.. -> P
 
 
 # Usage
+
+## CM4
 
 1.Start **micro_ros_agent** to debug the system at CM7 every time.
 
@@ -99,23 +106,25 @@ ros2 run micro_ros_agent micro_ros_agent serial --dev ttyACM0 -b 2000000
 ![loop_control](image/loop_control.png)
 This is function for control frequancy to get data from sensors, It have 1000 Hz as default.
 
-6. Switch to **main.c** in ***BNO086_H745_UROS_UART_CM4 (in CM7)***. Declare the **BNO086_t IMU_086** which is the object used to receive the data from CM4.
+## CM7
+
+1. Switch to **main.c** in ***BNO086_H745_UROS_UART_CM4 (in CM7)***. Declare the **BNO086_t IMU_086** which is the object used to receive the data from CM4.
 
     ![pvvar](image/pvvar.png)
 
-7. At **void timer_callback** where is a control loop in UROS, 
+2. At **void timer_callback** where is a control loop in UROS, 
     - **BNO086_READ_HSEM(&IMU_086)** : Read the data from CM4 and store in the **IMU_086** object.
     - **BNO086_Published()**: Extract the data and publish in ROS2 (Optional)
 
     ![086_read_hsem](image/BNO086READHSEM.png)
 
-8. This is an example of initialize the publishers to publish the data (Using best_effort)
+3. This is an example of initialize the publishers to publish the data (Using best_effort)
 ![initpub](image/innitpub.png)
 
-9. Create function for extract and publish the data. (You also can create a custom message interface to handle the additional data e.g. **Accerelation** and **Euler Angle**)
+4. Create function for extract and publish the data. (You also can create a custom message interface to handle the additional data e.g. **Accerelation** and **Euler Angle**)
  ![datapub](image/datapub.png)
 
-10. When you already debugged, you can add these below in **Live Expression**
+5. When you already debugged, you can add these below in **Live Expression**
    - **BNO086** for see data from sensor
    - **imu** for check CM7 that can read data from CM4 it will has same data as BNO086
    - **CALIBRATE**  for see status sensors when you enter calibration mode
@@ -131,7 +140,7 @@ This is function for control frequancy to get data from sensors, It have 1000 Hz
 ![datapub](image/LiveExp2.png)
 
 
-11. Inspect the data publisher by checking topic in terminal.
+6. Inspect the data publisher by checking topic in terminal.
 ```bash
 ros2 node list
 ```

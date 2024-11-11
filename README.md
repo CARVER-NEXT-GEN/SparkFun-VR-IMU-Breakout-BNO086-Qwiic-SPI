@@ -157,3 +157,14 @@ Try echo some topic:
 ros2 topic echo /BNO086_IMU_Publihser 
 ```
 ![tpecho](image/rosecho.png)
+
+# Pinout NUCLEO-H745ZI-Q with BNO086
+## Pinout connect BNO086 with NUCLEO-H745ZI-Q
+![BNO086_pinout](image/BNO086_pinout.png)
+## Pinout NUCLEO-H745ZI-Q
+![H745_pinout](image/H745_pinout.png)
+
+[**STM32H7 Nucleo-144 boards (MB1363) - User manual**](https://www.st.com/resource/en/user_manual/um2408-stm32h7-nucleo144-boards-mb1363-stmicroelectronics.pdf)
+
+# Rotation angle convention of BNO086
+![rotation_angle](image/rotation_BNO086.png)

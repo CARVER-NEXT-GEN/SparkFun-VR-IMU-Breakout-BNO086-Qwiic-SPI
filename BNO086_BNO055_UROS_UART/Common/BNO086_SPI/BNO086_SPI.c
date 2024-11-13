@@ -59,17 +59,17 @@ uint8_t accuracyMag;
 int BNO086_Initialization(BNO086_t *bno)
 {
 
-	CHIP_DESELECT(BNO086);
-	WAKE_HIGH();
-	RESET_HIGH();
+//	CHIP_DESELECT(BNO086);
+//	WAKE_HIGH();
+//	RESET_HIGH();
 
 	CHIP_DESELECT(BNO086);
 
 	//Configure the BNO086 for SPI communication
-	WAKE_HIGH();	//Before boot up the PS0/WAK pin must be high to enter SPI mode
-	RESET_LOW();	//Reset BNO086
-	HAL_Delay(200);	//Min length not specified in datasheet?
-	RESET_HIGH();	//Bring out of reset
+//	WAKE_HIGH();	//Before boot up the PS0/WAK pin must be high to enter SPI mode
+//	RESET_LOW();	//Reset BNO086
+//	HAL_Delay(200);	//Min length not specified in datasheet?
+//	RESET_HIGH();	//Bring out of reset
 
 	BNO086_waitForSPI(); //Wait until INT pin goes low.
 
@@ -1152,6 +1152,7 @@ void BNO086_SAVE_HSEM(BNO086_t *bno){
 		  SRAM4_BNO086->Data[16] = bno->euler_angle.roll;
 		  SRAM4_BNO086->Data[17] = bno->euler_angle.pitch;
 		  SRAM4_BNO086->Data[18] = bno->euler_angle.yaw;
+		  SRAM4_BNO086->State1 = 0;
 
 		  HAL_HSEM_Release(HSEM_ID_0,0);
 		}
@@ -1290,6 +1291,7 @@ void BNO086_READ_HSEM(BNO086_t *bno){
 		bno->euler_angle.roll = SRAM4_BNO086->Data[16];
 		bno->euler_angle.pitch = SRAM4_BNO086->Data[17];
 		bno->euler_angle.yaw = SRAM4_BNO086->Data[18];
+		SRAM4_BNO086->State1 = 1;
         HAL_HSEM_Release(HSEM_ID_0, 0);
     }
 }

@@ -396,7 +396,7 @@ void BNO055_SAVE_HSEM(BNO055_t *bno){
 		SRAM4_BNO055->Data[18] = bno->euler.pitch;
 		SRAM4_BNO055->Data[19] = bno->euler.yaw;
 
-
+		SRAM4_BNO055->State1 = 0;
 		HAL_HSEM_Release(HSEM_ID_1,0);
 	}
 }
@@ -428,6 +428,7 @@ void BNO055_READ_HSEM(BNO055_t *bno){
 		bno->euler.roll = SRAM4_BNO055->Data[17];
 		bno->euler.pitch = SRAM4_BNO055->Data[18];
 		bno->euler.yaw = SRAM4_BNO055->Data[19];
+		SRAM4_BNO055->State1 = 1;
 		HAL_HSEM_Release(HSEM_ID_1,0);
 
 	}

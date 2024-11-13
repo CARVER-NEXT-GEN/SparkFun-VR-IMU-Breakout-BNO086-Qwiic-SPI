@@ -68,4 +68,4 @@
 /home/tim/Documents/GitHub/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_BNO055_UROS_UART/Common/BNO086_SPI/BNO086_SPI.c:1063:7:getYaw	64	static
 /home/tim/Documents/GitHub/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_BNO055_UROS_UART/Common/BNO086_SPI/BNO086_SPI.c:1091:6:BNO086_getData	16	static
 /home/tim/Documents/GitHub/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_BNO055_UROS_UART/Common/BNO086_SPI/BNO086_SPI.c:1125:6:BNO086_SAVE_HSEM	24	static
-/home/tim/Documents/GitHub/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_BNO055_UROS_UART/Common/BNO086_SPI/BNO086_SPI.c:1160:6:BNO086_Calibration	24	static
+/home/tim/Documents/GitHub/SparkFun-VR-IMU-Breakout-BNO086-Qwiic-SPI/BNO086_BNO055_UROS_UART/Common/BNO086_SPI/BNO086_SPI.c:1161:6:BNO086_Calibration	24	static

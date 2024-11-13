@@ -2,7 +2,7 @@
 ../Core/Src/main.c:226:6:SystemClock_Config	4
 ../Core/Src/main.c:283:6:timer_callback	3
 ../Core/Src/main.c:309:6:SensorsPublished	1
-../Core/Src/main.c:437:6:StartDefaultTask	2
-../Core/Src/main.c:535:6:HAL_HSEM_FreeCallback	3
-../Core/Src/main.c:557:6:HAL_TIM_PeriodElapsedCallback	2
-../Core/Src/main.c:574:6:Error_Handler	1
+../Core/Src/main.c:439:6:StartDefaultTask	2
+../Core/Src/main.c:537:6:HAL_HSEM_FreeCallback	3
+../Core/Src/main.c:559:6:HAL_TIM_PeriodElapsedCallback	2
+../Core/Src/main.c:576:6:Error_Handler	1

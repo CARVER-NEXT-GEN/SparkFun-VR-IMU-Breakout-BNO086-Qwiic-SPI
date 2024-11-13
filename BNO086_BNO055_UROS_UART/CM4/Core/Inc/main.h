@@ -65,12 +65,10 @@ void Error_Handler(void);
 #define STLINK_RX_GPIO_Port GPIOD
 #define STLINK_TX_Pin GPIO_PIN_9
 #define STLINK_TX_GPIO_Port GPIOD
-#define WAK_Pin GPIO_PIN_14
+#define INT_Pin GPIO_PIN_5
+#define INT_GPIO_Port GPIOD
+#define WAK_Pin GPIO_PIN_6
 #define WAK_GPIO_Port GPIOD
-#define RST_Pin GPIO_PIN_15
-#define RST_GPIO_Port GPIOD
-#define INT_Pin GPIO_PIN_9
-#define INT_GPIO_Port GPIOG
 #define CS_Pin GPIO_PIN_5
 #define CS_GPIO_Port GPIOB
 

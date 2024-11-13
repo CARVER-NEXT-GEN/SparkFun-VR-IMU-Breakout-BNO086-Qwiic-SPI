@@ -72,8 +72,8 @@ rcl_init_options_t init_options;
 rclc_executor_t executor;
 rcl_timer_t timer_;
 int sync_counter = 0;
-rcl_publisher_t f64array_pub;
 
+rcl_publisher_t f64array_pub;
 double f64array_data[29];
 std_msgs__msg__Float64MultiArray f64array_msg = {
     .data = { .data = f64array_data, .capacity = 29, .size = 29 }
@@ -285,11 +285,11 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 	if (timer != NULL) {
 
 			// BNO086 Data
-			BNO086_READ_HSEM(&IMU_086);
+
 //			BNO086_Published();
 
 			// BNO055 Data
-			BNO055_READ_HSEM(&IMU_055);
+
 //			BNO055_Published();
 
 			SensorsPublished();
@@ -311,7 +311,7 @@ void SensorsPublished(){
 //    f64array_msg.data.capacity = 29;  // Adjust capacity as needed
 //    f64array_msg.data.size = 29;      // Set size of the array
 //    f64array_msg.data.data = (float*)malloc(sizeof(float) * f64array_msg.data.size);
-
+	BNO086_READ_HSEM(&IMU_086);
 
     // IMU_086 acceleration
     f64array_msg.data.data[0] = IMU_086.acceleration.x;
@@ -338,6 +338,8 @@ void SensorsPublished(){
     f64array_msg.data.data[13] = IMU_086.euler_angle.pitch;
     f64array_msg.data.data[14] = IMU_086.euler_angle.yaw;
 
+
+    BNO055_READ_HSEM(&IMU_055);
     // IMU_055 acceleration
     f64array_msg.data.data[15] = IMU_055.accel.x;
     f64array_msg.data.data[16] = IMU_055.accel.y;

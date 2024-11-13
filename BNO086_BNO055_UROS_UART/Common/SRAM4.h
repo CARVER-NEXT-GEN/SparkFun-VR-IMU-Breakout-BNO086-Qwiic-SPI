@@ -13,7 +13,7 @@
 #define SHARED_MEMORY_ADDRESS_BNO055 0x38002000 //SRAM4 address
 
 typedef struct{
-	uint32_t State1;
+	uint8_t State1;
 	double Data[40]; //Out of Complier scope So can bigger sa it not more than 64kB which not notice us
 
 }SharedMemory;

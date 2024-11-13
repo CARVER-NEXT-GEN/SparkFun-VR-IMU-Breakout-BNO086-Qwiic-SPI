@@ -31,8 +31,8 @@
 #define WAKE_HIGH()             HAL_GPIO_WritePin(WAK_GPIO_Port, WAK_Pin, GPIO_PIN_SET)
 #define WAKE_LOW()              HAL_GPIO_WritePin(WAK_GPIO_Port, WAK_Pin, GPIO_PIN_RESET)
 
-#define RESET_HIGH()            HAL_GPIO_WritePin(RST_GPIO_Port, RST_Pin, GPIO_PIN_SET)
-#define RESET_LOW()             HAL_GPIO_WritePin(RST_GPIO_Port, RST_Pin, GPIO_PIN_RESET)
+//#define RESET_HIGH()            HAL_GPIO_WritePin(RST_GPIO_Port, RST_Pin, GPIO_PIN_SET)
+//#define RESET_LOW()             HAL_GPIO_WritePin(RST_GPIO_Port, RST_Pin, GPIO_PIN_RESET)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 

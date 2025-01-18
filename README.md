@@ -116,3 +116,8 @@ You can calcurate frequancy in Hz to period time in microsecond and add in funct
 ![Timer-nvic-ioc](image/tim-nvic.png)
 ## UART
 ![LPUART-ioc](image/lpuart.png)
+
+**Note:** If you want to change pin  INT, WAK, CS different from default you can change in IOC then change in library like this
+1. Go to file from **Core**->**Inc**>**BNO086_SPI.h** path.
+2. You can change pin and port as you want at picture below.
+![pin](image/pin.png)

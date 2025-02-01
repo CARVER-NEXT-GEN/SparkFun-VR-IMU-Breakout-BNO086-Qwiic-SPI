@@ -1,0 +1,4 @@
+[submodule "G4_BNO086_UROS_UART/micro_ros_stm32cubemx_utils"]
+	path = G4_BNO086_UROS_UART/micro_ros_stm32cubemx_utils
+	url = https://github.com/CARVER-NEXT-GEN/micro_ros_stm32cubemx_utils.git
+	branch = humble
